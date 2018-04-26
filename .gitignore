@@ -1,0 +1,13 @@
+# untracked files
+/out/
+guillermo_rojas_hernandez_viren_mody_courseproject.iml
+.idea/
+
+# Output Analysis files
+/src/*.csv
+
+# Python cache
+/src/__pycache__/
+
+# Virtual Environment
+/src/venv/
