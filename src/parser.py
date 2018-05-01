@@ -1,3 +1,5 @@
+# Source: https://stackoverflow.com/questions/32216707/parsing-a-groovy-file-in-python
+
 from shlex import shlex
 from ast import literal_eval
 
