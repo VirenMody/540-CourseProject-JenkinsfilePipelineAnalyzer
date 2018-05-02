@@ -1,9 +1,12 @@
 import pandas as pd
+import logging
+
+# Retrieve same logger as defined in project.py
+logger = logging.getLogger('project')
 
 
 df_headers = ['RepositoryName', 'PipelineConfigFile', 'TriggerType', 'TriggerValue', 'NumStages']
 df_headers = ['RepositoryName', 'PipelineConfigFile', 'StageName', 'occurrence']
-
 
 def create_df():
     """
@@ -11,6 +14,7 @@ def create_df():
     :return: data_frame: DataFrame
     """
     data_frame = pd.DataFrame(columns=df_headers)
+    logger.debug('Created DataFrame')
     return data_frame
 
 

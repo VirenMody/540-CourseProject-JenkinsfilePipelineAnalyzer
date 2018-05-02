@@ -11,3 +11,6 @@ guillermo_rojas_hernandez_viren_mody_courseproject.iml
 
 # Virtual Environment
 /src/venv/
+
+# log files
+/src/*.log
