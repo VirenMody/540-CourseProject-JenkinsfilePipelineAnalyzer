@@ -1,7 +1,21 @@
 
+# TODO Repository search for Jenkinsfile + other keywords
 
-def occurrences_in_file(filename, word_to_search):
-    jenkinsfile = open(filename, 'r').read()
-    if jenkinsfile.count('triggers') > 0:
-        print('The number of stages in this Jenkinsfile is: ', jenkinsfile.count(word_to_search))
 
+def rq_trigger_to_num_stages():
+    triggers = ['cron', 'pollSCM', 'upstream']
+    triggers_found = []
+    num_stages = 0
+    with open('testjenkinsfile2') as jenkinsfile:
+        for line in jenkinsfile:
+            line = line.strip('\n')
+            # print(line)
+            if any(trigger in line for trigger in triggers):
+                triggers_found.append(line)
+            if 'stage' in line:
+                num_stages += 1
+    num_stages -= 1
+    print(triggers_found, ' ', num_stages)
+
+
+rq_trigger_to_num_stages()
