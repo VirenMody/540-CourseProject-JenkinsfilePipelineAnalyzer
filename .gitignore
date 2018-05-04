@@ -14,3 +14,6 @@ guillermo_rojas_hernandez_viren_mody_courseproject.iml
 
 # log files
 /src/*.log
+
+# Cloned files/repos
+/ClonedRepos
