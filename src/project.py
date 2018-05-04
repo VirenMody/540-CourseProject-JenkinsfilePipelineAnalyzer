@@ -1,7 +1,13 @@
 import logging
+import os
+import nltk
+
 import project_utils
 
-# TODO Repository search for Jenkinsfile + other keywords
+# TODO Update the following to paths for your system
+CLONED_REPOS_DIR_PATH = 'C:/Users/Viren/Google Drive/1.UIC/540/guillermo_rojas_hernandez_viren_mody_courseproject/ClonedRepos/'
+# CLONED_REPOS_DIR_PATH = '/home/guillermo/cs540/cloned_repos/'
+
 
 # Retrieve logger to be used for both project.py and project_utils.py
 logger = logging.getLogger('project')
@@ -31,27 +37,76 @@ def configure_logger():
     logger.addHandler(stream_handler)
 
 
-def rq_trigger_to_num_stages():
+# TODO Add function description
+# TODO Error/exception handling (i.e. empty Jenkinsfile, empty triggers or stages)
+def rq_trigger_to_num_stages(jenkinsfile):
     triggers = ['cron', 'pollSCM', 'upstream']
     triggers_found = []
+    trigger_type = ''
+    stages_found = []
+    stage_name = ''
     num_stages = 0
-    with open('testjenkinsfile2') as jenkinsfile:
-        for line in jenkinsfile:
+    with open(jenkinsfile) as file:
+        for line in file:
             line = line.strip('\n')
-            # print(line)
-            if any(trigger in line for trigger in triggers):
-                triggers_found.append(line)
-            if 'stage' in line:
-                num_stages += 1
-    num_stages -= 1
-    print(triggers_found, ' ', num_stages)
+            if any(trig in line for trig in triggers):
+                if 'cron' in line:
+                    trigger_type = 'cron'
+                elif 'pollSCM' in line:
+                    trigger_type = 'pollSCM'
+                elif 'upstream' in line:
+                    trigger_type = 'upstream'
 
+                # Retrieve trigger value from between parentheses and single quotes
+                trigger_value = line[line.find('\'')+1:line.find('\'')]
+                logger.debug('ADDING TRIGGER:  %s = %s', trigger_type, trigger_value)
+                triggers_found.append({'TriggerType': trigger_type, 'TriggerValue': trigger_value})
+
+            if 'stage' in line and 'stages' not in line:
+                num_stages += 1
+                logger.debug('LINE: %s', line)
+                line = line.replace('\'', '')
+                line = line.replace('(', '')
+                line = line.replace(')', '')
+                logger.debug('LINE: %s', line)
+                if '(\'' in line and '\')' in line:
+                    print(line.find('\'')+1)
+                    print(line.strip('( '))
+                    logger.debug('*************** HERE ******************** %s', line)
+                    stage_name = line[line.find('\'')+1:line.find('\'')]
+                elif '(\"' in line and '\")' in line:
+                    stage_name = line[line.find('\"')+1:line.find('\"')]
+                elif '\'' in line and '\'' in line:
+                    stage_name = line[line.find('\'') + 1:line.find('\'')]
+                elif '\"' in line and '\"' in line:
+                    stage_name = line[line.find('\"')+1:line.find('\"')]
+                logger.debug('ADDING STAGE:  %s, Occurrence: %s', stage_name, num_stages)
+                stages_found.append({'StageName': stage_name, 'Occurrence': num_stages})
+
+    logger.debug('TRIGGERS: %s', triggers_found)
+    logger.debug('STAGES: %s', stages_found)
 
 def main():
     configure_logger()
-    project_utils.create_df()
-    logger.debug('Testing logger')
-    rq_trigger_to_num_stages()
+
+    # TODO Wrap each research question into a separate function??
+    # Research Question #1
+    logger.info('Analyzing for Research Question 1: How does the presence of triggers in a pipeline correlate with the number of stages in the pipeline?')
+    # TODO Add code here to download Jenkinsfiles containing keyword 'triggers'
+    username = 'testuser'
+    repo_name = 'testrepo'
+    jenkinsfile_path = CLONED_REPOS_DIR_PATH + username + repo_name + '/Jenkinsfile'
+    logger.info(jenkinsfile_path)
+
+    #  Confirm Jenkinsfile does exist TODO error/exception handling...skip the file
+    logger.info(os.path.isfile(jenkinsfile_path))
+
+    df_headers_triggers = ['RepositoryName', 'TriggerType', 'TriggerValue', 'NumStages']
+    df_triggers = project_utils.create_df(df_headers_triggers)
+    df_headers_stages = ['RepositoryName', 'StageName', 'Occurrence']
+    df_stages = project_utils.create_df(df_headers_stages)
+    rq_trigger_to_num_stages(jenkinsfile_path)
 
 
-main()
+if __name__ == '__main__':
+    main()

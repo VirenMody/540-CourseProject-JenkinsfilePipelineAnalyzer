@@ -4,11 +4,7 @@ import logging
 # Retrieve same logger as defined in project.py
 logger = logging.getLogger('project')
 
-
-df_headers = ['RepositoryName', 'PipelineConfigFile', 'TriggerType', 'TriggerValue', 'NumStages']
-df_headers = ['RepositoryName', 'PipelineConfigFile', 'StageName', 'occurrence']
-
-def create_df():
+def create_df(df_headers):
     """
     Function creates Python Pandas DataFrame used to store data from Jenkinsfile analysis
     :return: data_frame: DataFrame
