@@ -67,7 +67,7 @@ def search_by_code(git_hub, my_query, num):
         raw_url = "https://raw.githubusercontent.com/" + item.repository.full_name + '/' + blob_hash + '/' + item.path
         logging.debug("raw_url: %s", raw_url)
 
-        results.append((result_object, raw_url))
+        results.append((result_object, raw_url, item.repository.full_name))
 
     return results
 
