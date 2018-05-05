@@ -1,7 +1,6 @@
 import logging
 import os
-import nltk
-
+import re
 import project_utils
 
 # TODO Update the following to paths for your system
@@ -39,13 +38,16 @@ def configure_logger():
 
 # TODO Add function description
 # TODO Error/exception handling (i.e. empty Jenkinsfile, empty triggers or stages)
-def rq_trigger_to_num_stages(jenkinsfile):
+# TODO Only include declarative pipelines?
+def parse_triggers_and_stages(jenkinsfile):
     triggers = ['cron', 'pollSCM', 'upstream']
     triggers_found = []
     trigger_type = ''
+
     stages_found = []
     stage_name = ''
     num_stages = 0
+
     with open(jenkinsfile) as file:
         for line in file:
             line = line.strip('\n')
@@ -58,33 +60,24 @@ def rq_trigger_to_num_stages(jenkinsfile):
                     trigger_type = 'upstream'
 
                 # Retrieve trigger value from between parentheses and single quotes
-                trigger_value = line[line.find('\'')+1:line.find('\'')]
+                re_triggers_pattern = r"[A-Za-z]*\(\'*\"*(.+?)\'*\"*\)"
+                trigger_value = re.search(re_triggers_pattern, line).group(1)
+                logger.debug('LINE: %s', line)
                 logger.debug('ADDING TRIGGER:  %s = %s', trigger_type, trigger_value)
-                triggers_found.append({'TriggerType': trigger_type, 'TriggerValue': trigger_value})
+                triggers_found.append({'Type': trigger_type, 'Value': trigger_value})
 
             if 'stage' in line and 'stages' not in line:
                 num_stages += 1
+                re_stages_pattern = r"stage\s*\(*\s*\'*\"*([A-Za-z]*)\'*\"*\s*\)*"
+                stage_name = re.search(re_stages_pattern, line).group(1)
                 logger.debug('LINE: %s', line)
-                line = line.replace('\'', '')
-                line = line.replace('(', '')
-                line = line.replace(')', '')
-                logger.debug('LINE: %s', line)
-                if '(\'' in line and '\')' in line:
-                    print(line.find('\'')+1)
-                    print(line.strip('( '))
-                    logger.debug('*************** HERE ******************** %s', line)
-                    stage_name = line[line.find('\'')+1:line.find('\'')]
-                elif '(\"' in line and '\")' in line:
-                    stage_name = line[line.find('\"')+1:line.find('\"')]
-                elif '\'' in line and '\'' in line:
-                    stage_name = line[line.find('\'') + 1:line.find('\'')]
-                elif '\"' in line and '\"' in line:
-                    stage_name = line[line.find('\"')+1:line.find('\"')]
                 logger.debug('ADDING STAGE:  %s, Occurrence: %s', stage_name, num_stages)
-                stages_found.append({'StageName': stage_name, 'Occurrence': num_stages})
+                stages_found.append({'Name': stage_name, 'Occurrence': num_stages})
 
     logger.debug('TRIGGERS: %s', triggers_found)
     logger.debug('STAGES: %s', stages_found)
+    return triggers_found, stages_found, num_stages
+
 
 def main():
     configure_logger()
@@ -96,17 +89,26 @@ def main():
     username = 'testuser'
     repo_name = 'testrepo'
     jenkinsfile_path = CLONED_REPOS_DIR_PATH + username + repo_name + '/Jenkinsfile'
-    logger.info(jenkinsfile_path)
 
     #  Confirm Jenkinsfile does exist TODO error/exception handling...skip the file
-    logger.info(os.path.isfile(jenkinsfile_path))
+    logger.info('%s exists? %s', jenkinsfile_path, os.path.isfile(jenkinsfile_path))
 
-    df_headers_triggers = ['RepositoryName', 'TriggerType', 'TriggerValue', 'NumStages']
+    # Parse triggers and stages from file
+    triggers_data, stages_data, num_stages = parse_triggers_and_stages(jenkinsfile_path)
+
+    df_headers_triggers = ['Username', 'RepositoryName', 'TriggerType', 'TriggerValue', 'NumStages']
     df_triggers = project_utils.create_df(df_headers_triggers)
-    df_headers_stages = ['RepositoryName', 'StageName', 'Occurrence']
+    df_headers_stages = ['Username', 'RepositoryName', 'StageName', 'Occurrence', 'NumStages']
     df_stages = project_utils.create_df(df_headers_stages)
-    rq_trigger_to_num_stages(jenkinsfile_path)
+    for trigger in triggers_data:
+        new_row = [[username, repo_name, trigger['Type'], trigger['Value'], num_stages]]
+        df_triggers = project_utils.add_row_to_df(df_triggers, df_headers_triggers, new_row)
+    for stage in stages_data:
+        new_row = [[username, repo_name, stage['Name'], stage['Occurrence'], num_stages]]
+        df_stages = project_utils.add_row_to_df(df_stages, df_headers_stages, new_row)
 
+    print(df_triggers)
+    print(df_stages)
 
 if __name__ == '__main__':
     main()

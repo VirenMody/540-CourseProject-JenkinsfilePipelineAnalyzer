@@ -14,7 +14,7 @@ def create_df(df_headers):
     return data_frame
 
 
-def add_row_to_df(df, new_row):
+def add_row_to_df(df, df_headers, new_row):
     """
     Function inserts each new row of data found when analyzing Jenkinsfile into the DataFrame
     :param df: old Python Pandas DataFrame
