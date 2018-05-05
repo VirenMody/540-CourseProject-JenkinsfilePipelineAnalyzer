@@ -17,3 +17,7 @@ guillermo_rojas_hernandez_viren_mody_courseproject.iml
 
 # Cloned files/repos
 /ClonedRepos
+
+# Jupyter Notebook files
+/src/.ipynb_checkpoints/
+*.ipynb
