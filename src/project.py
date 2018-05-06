@@ -1,3 +1,4 @@
+import itertools
 import logging
 import os
 import re
@@ -35,6 +36,7 @@ def configure_logger():
     logger.addHandler(file_handler)
     logger.addHandler(stream_handler)
 
+# TODO Skip invalid Jenkinsfiles (i.e. empty, imbalanced brackets, starts with pipeline or node)+
 
 # TODO Add function description
 # TODO Error/exception handling (i.e. empty Jenkinsfile, empty triggers or stages)
@@ -78,12 +80,12 @@ def parse_triggers_and_stages(jenkinsfile):
     logger.debug('STAGES: %s', stages_found)
     return triggers_found, stages_found, num_stages
 
+def analyze_research_question1():
+    """
 
-def main():
-    configure_logger()
+    :return:
+    """
 
-    # TODO Wrap each research question into a separate function??
-    # Research Question #1
     logger.info('Analyzing for Research Question 1: How does the presence of triggers in a pipeline correlate with the number of stages in the pipeline?')
     # TODO Add code here to download Jenkinsfiles containing keyword 'triggers'
     username = 'testuser'
@@ -96,19 +98,49 @@ def main():
     # Parse triggers and stages from file
     triggers_data, stages_data, num_stages = parse_triggers_and_stages(jenkinsfile_path)
 
-    df_headers_triggers = ['Username', 'RepositoryName', 'TriggerType', 'TriggerValue', 'NumStages']
-    df_triggers = project_utils.create_df(df_headers_triggers)
-    df_headers_stages = ['Username', 'RepositoryName', 'StageName', 'Occurrence', 'NumStages']
-    df_stages = project_utils.create_df(df_headers_stages)
-    for trigger in triggers_data:
-        new_row = [[username, repo_name, trigger['Type'], trigger['Value'], num_stages]]
-        df_triggers = project_utils.add_row_to_df(df_triggers, df_headers_triggers, new_row)
-    for stage in stages_data:
-        new_row = [[username, repo_name, stage['Name'], stage['Occurrence'], num_stages]]
-        df_stages = project_utils.add_row_to_df(df_stages, df_headers_stages, new_row)
+    combined_data = list(itertools.zip_longest(triggers_data, stages_data))
+    df_headers = ['Username', 'RepositoryName', 'TriggerType', 'TriggerValue', 'StageName', 'Occurrence', 'NumStages']
+    df = project_utils.create_df(df_headers)
+    for iteration, data in enumerate(combined_data):
+        print(data)
 
-    print(df_triggers)
-    print(df_stages)
+        trigger, stage = data
+        # trigger_type, trigger_value = (trigger['Type'], trigger['Value']) if trigger is not None else ('', '')
+        trigger_type = ''
+        trigger_value = ''
+        stage_name = ''
+        occurrence = 0
+        if trigger is not None:
+            trigger_type = trigger['Type']
+            trigger_value = trigger['Value']
+        if stage is not None:
+            stage_name = stage['Name']
+            occurrence = stage['Occurrence']
+
+        new_row = [[username, repo_name, trigger_type, trigger_value, stage_name, occurrence, num_stages]]
+        df = project_utils.add_row_to_df(df, df_headers, new_row)
+    print(df)
+
+    # df_headers_triggers = ['Username', 'RepositoryName', 'TriggerType', 'TriggerValue', 'NumStages']
+    # df_triggers = project_utils.create_df(df_headers_triggers)
+    # df_headers_stages = ['Username', 'RepositoryName', 'StageName', 'Occurrence', 'NumStages']
+    # df_stages = project_utils.create_df(df_headers_stages)
+    # for trigger in triggers_data:
+    #     new_row = [[username, repo_name, trigger['Type'], trigger['Value'], num_stages]]
+    #     df_triggers = project_utils.add_row_to_df(df_triggers, df_headers_triggers, new_row)
+    # for stage in stages_data:
+    #     new_row = [[username, repo_name, stage['Name'], stage['Occurrence'], num_stages]]
+    #     df_stages = project_utils.add_row_to_df(df_stages, df_headers_stages, new_row)
+    #
+    # print(df_triggers)
+    # print(df_stages)
+
+
+def main():
+    configure_logger()
+
+    # Research Question #1
+    analyze_research_question1()
 
 if __name__ == '__main__':
     main()
