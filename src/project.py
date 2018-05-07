@@ -4,6 +4,9 @@ import os
 import re
 import project_utils
 
+# TODO Skip invalid Jenkinsfiles (i.e. empty, imbalanced brackets, starts with pipeline or node)+
+
+
 # TODO Update the following to paths for your system
 CLONED_REPOS_DIR_PATH = 'C:/Users/Viren/Google Drive/1.UIC/540/guillermo_rojas_hernandez_viren_mody_courseproject/ClonedRepos/'
 # CLONED_REPOS_DIR_PATH = '/home/guillermo/cs540/cloned_repos/'
@@ -19,6 +22,7 @@ WARNING	An indication that something unexpected happened, or indicative of some 
 ERROR	Due to a more serious problem, the software has not been able to perform some function.
 CRITICAL	A serious error, indicating that the program itself may be unable to continue running.
 """
+
 
 def configure_logger():
     """
@@ -36,15 +40,19 @@ def configure_logger():
     logger.addHandler(file_handler)
     logger.addHandler(stream_handler)
 
-# TODO Skip invalid Jenkinsfiles (i.e. empty, imbalanced brackets, starts with pipeline or node)+
 
-# TODO Add function description
 # TODO Error/exception handling (i.e. empty Jenkinsfile, empty triggers or stages)
 # TODO Only include declarative pipelines?
 def parse_triggers_and_stages(jenkinsfile):
+    """
+    Function parses jenkinsfile for trigger and stage counts and info
+    :param jenkinsfile: path to Jenkinsfile to parse
+    :return: list of triggers, list of stages and number of triggers and stages
+    """
     triggers = ['cron', 'pollSCM', 'upstream']
     triggers_found = []
     trigger_type = ''
+    num_triggers = 0
 
     stages_found = []
     stage_name = ''
@@ -54,6 +62,8 @@ def parse_triggers_and_stages(jenkinsfile):
         for line in file:
             line = line.strip('\n')
             if any(trig in line for trig in triggers):
+                num_triggers += 1
+
                 if 'cron' in line:
                     trigger_type = 'cron'
                 elif 'pollSCM' in line:
@@ -66,7 +76,7 @@ def parse_triggers_and_stages(jenkinsfile):
                 trigger_value = re.search(re_triggers_pattern, line).group(1)
                 logger.debug('LINE: %s', line)
                 logger.debug('ADDING TRIGGER:  %s = %s', trigger_type, trigger_value)
-                triggers_found.append({'Type': trigger_type, 'Value': trigger_value})
+                triggers_found.append({'Type': trigger_type, 'Value': trigger_value, 'Occurrence': num_triggers})
 
             if 'stage' in line and 'stages' not in line:
                 num_stages += 1
@@ -78,15 +88,17 @@ def parse_triggers_and_stages(jenkinsfile):
 
     logger.debug('TRIGGERS: %s', triggers_found)
     logger.debug('STAGES: %s', stages_found)
-    return triggers_found, stages_found, num_stages
+    return triggers_found, stages_found, num_stages, num_triggers
+
 
 def analyze_research_question1():
     """
-
+    Function downloads Jenkinsfiles, parses it, and analyzes the data to answer:
+    Research Question #1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?
     :return:
     """
 
-    logger.info('Analyzing for Research Question 1: How does the presence of triggers in a pipeline correlate with the number of stages in the pipeline?')
+    logger.info('Analyzing for Research Question 1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?')
     # TODO Add code here to download Jenkinsfiles containing keyword 'triggers'
     username = 'testuser'
     repo_name = 'testrepo'
@@ -96,29 +108,33 @@ def analyze_research_question1():
     logger.info('%s exists? %s', jenkinsfile_path, os.path.isfile(jenkinsfile_path))
 
     # Parse triggers and stages from file
-    triggers_data, stages_data, num_stages = parse_triggers_and_stages(jenkinsfile_path)
+    triggers_data, stages_data, num_stages, num_triggers = parse_triggers_and_stages(jenkinsfile_path)
 
     combined_data = list(itertools.zip_longest(triggers_data, stages_data))
-    df_headers = ['Username', 'RepositoryName', 'TriggerType', 'TriggerValue', 'StageName', 'Occurrence', 'NumStages']
+    df_headers = ['Username', 'RepositoryName', 'TriggerType', 'TriggerValue', 'TriggerOccurrence', 'StageName', 'StageOccurrence']
     df = project_utils.create_df(df_headers)
     for iteration, data in enumerate(combined_data):
-        print(data)
-
         trigger, stage = data
-        # trigger_type, trigger_value = (trigger['Type'], trigger['Value']) if trigger is not None else ('', '')
         trigger_type = ''
         trigger_value = ''
+        trigger_occurrence = ''
         stage_name = ''
-        occurrence = 0
+        stage_occurrence = 0
         if trigger is not None:
             trigger_type = trigger['Type']
             trigger_value = trigger['Value']
+            trigger_occurrence = trigger['Occurrence']
         if stage is not None:
             stage_name = stage['Name']
-            occurrence = stage['Occurrence']
+            stage_occurrence = stage['Occurrence']
 
-        new_row = [[username, repo_name, trigger_type, trigger_value, stage_name, occurrence, num_stages]]
+        new_row = [[username, repo_name, trigger_type, trigger_value, trigger_occurrence, stage_name, stage_occurrence]]
         df = project_utils.add_row_to_df(df, df_headers, new_row)
+
+        if iteration == 0:
+            username = ''
+            repo_name = ''
+
     print(df)
 
     # df_headers_triggers = ['Username', 'RepositoryName', 'TriggerType', 'TriggerValue', 'NumStages']
