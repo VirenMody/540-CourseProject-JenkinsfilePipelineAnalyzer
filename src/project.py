@@ -1,5 +1,4 @@
 from github3 import GitHub
-import gh_search_utils
 import requests
 import pathlib
 import itertools
@@ -10,8 +9,8 @@ import re #regex
 import project_utils
 
 
-# TODO Skip invalid Jenkinsfiles (i.e. empty, imbalanced brackets, starts with pipeline or node)+
-
+# TODO Skip invalid Jenkinsfiles (i.e. empty, imbalanced brackets, starts with pipeline or node)
+# TODO For each research question, put together a list of repositories with good Jenkinsfiles
 
 # TODO Update the following to paths for your system
 CLONED_REPOS_DIR_PATH = 'C:/Users/Viren/Google Drive/1.UIC/540/guillermo_rojas_hernandez_viren_mody_courseproject/ClonedRepos/'
@@ -145,20 +144,6 @@ def analyze_research_question1():
 
     print(df)
 
-    # df_headers_triggers = ['Username', 'RepositoryName', 'TriggerType', 'TriggerValue', 'NumStages']
-    # df_triggers = project_utils.create_df(df_headers_triggers)
-    # df_headers_stages = ['Username', 'RepositoryName', 'StageName', 'Occurrence', 'NumStages']
-    # df_stages = project_utils.create_df(df_headers_stages)
-    # for trigger in triggers_data:
-    #     new_row = [[username, repo_name, trigger['Type'], trigger['Value'], num_stages]]
-    #     df_triggers = project_utils.add_row_to_df(df_triggers, df_headers_triggers, new_row)
-    # for stage in stages_data:
-    #     new_row = [[username, repo_name, stage['Name'], stage['Occurrence'], num_stages]]
-    #     df_stages = project_utils.add_row_to_df(df_stages, df_headers_stages, new_row)
-    #
-    # print(df_triggers)
-    # print(df_stages)
-
 
 def main():
     configure_logger()
@@ -195,6 +180,7 @@ def main():
 
     # Research Question #1
     analyze_research_question1()
+
 
 if __name__ == '__main__':
     main()
