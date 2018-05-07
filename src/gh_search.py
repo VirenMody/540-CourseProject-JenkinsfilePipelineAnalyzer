@@ -15,8 +15,8 @@ GITHUB_USERNAME = 'virenmody'
 GITHUB_ACCESS_TOKEN = 'feec9be9b75ded7680e74e1be28b47c50564c2ac'
 
 # TODO Update the following to paths where commits are downloaded
-#LOCAL_CLONED_REPO_PATH = 'C:/Users/Viren/Google Drive/1.UIC/540/hw2/ClonedRepos/'
-LOCAL_CLONED_REPO_PATH = '/home/guillermo/cs540/guillermo_rojas_hernandez_viren_mody_courseproject/ClonedRepos/'
+LOCAL_CLONED_REPO_PATH = 'C:/Users/Viren/Google Drive/1.UIC/540/guillermo_rojas_hernandez_viren_mody_courseproject/ClonedRepos/'
+# LOCAL_CLONED_REPO_PATH = '/home/guillermo/cs540/guillermo_rojas_hernandez_viren_mody_courseproject/ClonedRepos/'
 
 
 logging.info('GITHUB_USERNAME: %s', GITHUB_USERNAME)
