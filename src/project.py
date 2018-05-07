@@ -1,16 +1,24 @@
+from github3 import GitHub
+import gh_search_utils
+import requests
+import pathlib
 import itertools
 import logging
 import os
-import re
+import re #regex
+
 import project_utils
+
 
 # TODO Skip invalid Jenkinsfiles (i.e. empty, imbalanced brackets, starts with pipeline or node)+
 
 
 # TODO Update the following to paths for your system
 CLONED_REPOS_DIR_PATH = 'C:/Users/Viren/Google Drive/1.UIC/540/guillermo_rojas_hernandez_viren_mody_courseproject/ClonedRepos/'
-# CLONED_REPOS_DIR_PATH = '/home/guillermo/cs540/cloned_repos/'
+# CLONED_REPOS_DIR_PATH = '/home/guillermo/cs540/guillermo_rojas_hernandez_viren_mody_courseproject/ClonedRepos/'
 
+GITHUB_USERNAME = 'virenmody'
+GITHUB_ACCESS_TOKEN = 'feec9be9b75ded7680e74e1be28b47c50564c2ac'
 
 # Retrieve logger to be used for both project.py and project_utils.py
 logger = logging.getLogger('project')
@@ -154,6 +162,36 @@ def analyze_research_question1():
 
 def main():
     configure_logger()
+
+    logger.info('GITHUB_USERNAME: %s', GITHUB_USERNAME)
+    logger.info('GITHUB_ACCESS_TOKEN: %s', GITHUB_ACCESS_TOKEN)
+    logger.info('LOCAL_CLONED_REPO_PATH: %s', CLONED_REPOS_DIR_PATH)
+
+    # Authenticate GitHub object
+    git_hub = GitHub(GITHUB_USERNAME, GITHUB_ACCESS_TOKEN)
+
+    # Create Query and Search GitHub
+    query = "filename:jenkinsfile q=node"
+    num_results = 1
+
+    # Results are returned in tuples: ((github_object, raw_url))
+    results = gh_search_utils.search_by_code(git_hub, query, num_results)
+    logger.info("Results from hw3_utils.search_by_code: %s", results)
+
+    # Get file contents of all results (raw url is second item in tuple: results[i][1])
+    for i in range(0, len(results)):
+        res = requests.get(results[i][1])
+        # print text of result
+        logger.debug(res.text)
+        # print the whole folder name
+        logger.debug(results[i][2])
+        github_repo_name = results[i][2]
+        path_to_file = CLONED_REPOS_DIR_PATH + github_repo_name
+        pathlib.Path(path_to_file).mkdir(parents=True, exist_ok=True)
+
+        jenkinsfile_path = path_to_file + '/' + 'Jenkinsfile'
+        with open(jenkinsfile_path, "wb") as file:
+            file.write(res.content)
 
     # Research Question #1
     analyze_research_question1()
