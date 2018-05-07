@@ -1,3 +1,5 @@
+from time import sleep
+
 from github3 import GitHub
 import requests
 import pathlib
@@ -16,24 +18,26 @@ import project_utils
 CLONED_REPOS_DIR_PATH = 'C:/Users/Viren/Google Drive/1.UIC/540/guillermo_rojas_hernandez_viren_mody_courseproject/ClonedRepos/'
 # CLONED_REPOS_DIR_PATH = '/home/guillermo/cs540/guillermo_rojas_hernandez_viren_mody_courseproject/ClonedRepos/'
 
-GITHUB_USERNAME = 'virenmody'
-GITHUB_ACCESS_TOKEN = 'feec9be9b75ded7680e74e1be28b47c50564c2ac'
+# Global git_hub object
+git_hub = None
+
 
 # Retrieve logger to be used for both project.py and project_utils.py
 logger = logging.getLogger('project')
-""" Use this to appropriately categorize log types when logging
-LOGGING LEVELS
-DEBUG	Detailed information, typically of interest only when diagnosing problems.
-INFO	Confirmation that things are working as expected.
-WARNING	An indication that something unexpected happened, or indicative of some problem in the near future (e.g. ‘disk space low’). The software is still working as expected.
-ERROR	Due to a more serious problem, the software has not been able to perform some function.
-CRITICAL	A serious error, indicating that the program itself may be unable to continue running.
-"""
 
 
 def configure_logger():
     """
     Function configures logger level, format, and output stream
+
+    Source: https://docs.python.org/3/howto/logging.html
+    Use this to appropriately categorize log types when logging
+    LOGGING LEVELS
+    DEBUG	Detailed information, typically of interest only when diagnosing problems.
+    INFO	Confirmation that things are working as expected.
+    WARNING	An indication that something unexpected happened, or indicative of some problem in the near future (e.g. ‘disk space low’). The software is still working as expected.
+    ERROR	Due to a more serious problem, the software has not been able to perform some function.
+    CRITICAL	A serious error, indicating that the program itself may be unable to continue running.
     """
     LOG_FILENAME = 'project.log'
     logger.setLevel(logging.DEBUG)
@@ -46,6 +50,22 @@ def configure_logger():
 
     logger.addHandler(file_handler)
     logger.addHandler(stream_handler)
+
+
+def authenticate_github_object():
+    """
+    Function authenticates GitHub object using username and access token
+    """
+    GITHUB_USERNAME = 'virenmody'
+    GITHUB_ACCESS_TOKEN = 'feec9be9b75ded7680e74e1be28b47c50564c2ac'
+
+    # Authenticate GitHub object
+    global git_hub
+    git_hub = GitHub(GITHUB_USERNAME, GITHUB_ACCESS_TOKEN)
+
+    logger.info('GITHUB_USERNAME: %s', GITHUB_USERNAME)
+    logger.info('GITHUB_ACCESS_TOKEN: %s', GITHUB_ACCESS_TOKEN)
+    logger.info('LOCAL_CLONED_REPO_PATH: %s', CLONED_REPOS_DIR_PATH)
 
 
 # TODO Error/exception handling (i.e. empty Jenkinsfile, empty triggers or stages)
@@ -147,13 +167,7 @@ def analyze_research_question1():
 
 def main():
     configure_logger()
-
-    logger.info('GITHUB_USERNAME: %s', GITHUB_USERNAME)
-    logger.info('GITHUB_ACCESS_TOKEN: %s', GITHUB_ACCESS_TOKEN)
-    logger.info('LOCAL_CLONED_REPO_PATH: %s', CLONED_REPOS_DIR_PATH)
-
-    # Authenticate GitHub object
-    git_hub = GitHub(GITHUB_USERNAME, GITHUB_ACCESS_TOKEN)
+    authenticate_github_object()
 
     # Create Query and Search GitHub
     query = "filename:jenkinsfile q=pipeline triggers stages"
