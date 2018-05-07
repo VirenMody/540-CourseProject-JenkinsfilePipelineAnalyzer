@@ -171,11 +171,11 @@ def main():
     git_hub = GitHub(GITHUB_USERNAME, GITHUB_ACCESS_TOKEN)
 
     # Create Query and Search GitHub
-    query = "filename:jenkinsfile q=node"
-    num_results = 1
+    query = "filename:jenkinsfile q=pipeline triggers stages"
+    num_results = 2
 
     # Results are returned in tuples: ((github_object, raw_url))
-    results = gh_search_utils.search_by_code(git_hub, query, num_results)
+    results = project_utils.search_by_code(git_hub, query, num_results)
     logger.info("Results from hw3_utils.search_by_code: %s", results)
 
     # Get file contents of all results (raw url is second item in tuple: results[i][1])
