@@ -6,7 +6,7 @@ import pathlib
 import itertools
 import logging
 import os
-import re #regex
+import re  # regex
 
 import project_utils
 
@@ -161,7 +161,7 @@ def analyze_research_question1():
     logger.info('Analyzing for Research Question 1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?')
 
     # Create DataFrame to store all data
-    df_headers = ['Username', 'RepositoryName', 'TriggerType', 'TriggerValue', 'TriggerOccurrence', 'StageName', 'StageOccurrence']
+    df_headers = ['RepoNum', 'Username', 'RepositoryName', 'TriggerType', 'TriggerValue', 'TriggerOccurrence', 'StageName', 'StageOccurrence']
     df = project_utils.create_df(df_headers)
 
     # Create Query and Search GitHub
@@ -169,7 +169,7 @@ def analyze_research_question1():
     num_results = 10
     repo_data = search_and_download_jenkinsfiles(query, num_results)
 
-    for repo in repo_data:
+    for repo_num, repo in enumerate(repo_data):
         username = repo['Username']
         repo_name = repo['RepoName']
 
@@ -198,14 +198,19 @@ def analyze_research_question1():
                 stage_name = stage['Name']
                 stage_occurrence = stage['Occurrence']
 
-            new_row = [[username, repo_name, trigger_type, trigger_value, trigger_occurrence, stage_name, stage_occurrence]]
+            new_row = [[repo_num, username, repo_name, trigger_type, trigger_value, trigger_occurrence, stage_name, stage_occurrence]]
             df = project_utils.add_row_to_df(df, df_headers, new_row)
 
             if iteration == 0:
                 username = ''
                 repo_name = ''
+                repo_num = ''
 
-    print(df)
+        # Insert blank row for increased readability
+        df = project_utils.add_blank_row_to_df(df, df_headers)
+
+    # Write DataFrame to CSV file
+    df.to_csv('analysis.csv', sep=',', na_rep='', index=False)
 
 
 def main():

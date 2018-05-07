@@ -29,6 +29,19 @@ def add_row_to_df(df, df_headers, new_row):
     return df
 
 
+def add_blank_row_to_df(df, df_headers):
+    """
+    Function adds a blank row to the DataFrame for increased readability
+    :param df_headers: list of column headers
+    :param df: DataFrame to add row to
+    :return: DataFrame with blank row added
+    """
+    blank_row = [[''] * len(df_headers)]
+    new_df = pd.DataFrame(blank_row, columns=df_headers)
+    df = df.append(new_df, ignore_index=True)
+    return df
+
+
 def search_by_code(git_hub, my_query, num):
     """
     Function that searches Github code based on the given query and returns the requested number of results
