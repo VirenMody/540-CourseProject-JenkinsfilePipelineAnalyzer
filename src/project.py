@@ -127,6 +127,29 @@ def analyze_research_question1():
 
     logger.info('Analyzing for Research Question 1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?')
     # TODO Add code here to download Jenkinsfiles containing keyword 'triggers'
+    # Create Query and Search GitHub
+    query = "filename:jenkinsfile q=pipeline triggers stages"
+    num_results = 2
+
+    # Results are returned in tuples: ((github_object, raw_url))
+    results = project_utils.search_by_code(git_hub, query, num_results)
+    logger.info("Results from hw3_utils.search_by_code: %s", results)
+
+    # Get file contents of all results (raw url is second item in tuple: results[i][1])
+    for i in range(0, len(results)):
+        res = requests.get(results[i][1])
+        # print text of result
+        logger.debug(res.text)
+        # print the whole folder name
+        logger.debug(results[i][2])
+        github_repo_name = results[i][2]
+        path_to_file = CLONED_REPOS_DIR_PATH + github_repo_name
+        pathlib.Path(path_to_file).mkdir(parents=True, exist_ok=True)
+
+        jenkinsfile_path = path_to_file + '/' + 'Jenkinsfile'
+        with open(jenkinsfile_path, "wb") as file:
+            file.write(res.content)
+
     username = 'testuser'
     repo_name = 'testrepo'
     jenkinsfile_path = CLONED_REPOS_DIR_PATH + username + repo_name + '/Jenkinsfile'
@@ -168,29 +191,6 @@ def analyze_research_question1():
 def main():
     configure_logger()
     authenticate_github_object()
-
-    # Create Query and Search GitHub
-    query = "filename:jenkinsfile q=pipeline triggers stages"
-    num_results = 2
-
-    # Results are returned in tuples: ((github_object, raw_url))
-    results = project_utils.search_by_code(git_hub, query, num_results)
-    logger.info("Results from hw3_utils.search_by_code: %s", results)
-
-    # Get file contents of all results (raw url is second item in tuple: results[i][1])
-    for i in range(0, len(results)):
-        res = requests.get(results[i][1])
-        # print text of result
-        logger.debug(res.text)
-        # print the whole folder name
-        logger.debug(results[i][2])
-        github_repo_name = results[i][2]
-        path_to_file = CLONED_REPOS_DIR_PATH + github_repo_name
-        pathlib.Path(path_to_file).mkdir(parents=True, exist_ok=True)
-
-        jenkinsfile_path = path_to_file + '/' + 'Jenkinsfile'
-        with open(jenkinsfile_path, "wb") as file:
-            file.write(res.content)
 
     # Research Question #1
     analyze_research_question1()
