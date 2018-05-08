@@ -117,6 +117,52 @@ def parse_triggers_and_stages(jenkinsfile):
     logger.debug('STAGES: %s', stages_found)
     return triggers_found, stages_found, num_stages, num_triggers
 
+def parse_tools(jenkinsfile):
+    """
+    Function parses jenkinsfile for trigger and stage counts and info
+    :param jenkinsfile: path to Jenkinsfile to parse
+    :return: list of triggers, list of stages and number of triggers and stages
+    """
+    tools = ['maven', 'jdk']
+    tools_found = []
+    tool_type = ''
+    num_tools = 0
+
+    #stages_found = []
+    #stage_name = ''
+    #num_stages = 0
+
+    with open(jenkinsfile) as file:
+        for line in file:
+            line = line.strip('\n')
+            if any(trig in line for trig in tools):
+                num_tools += 1
+
+                if 'maven' in line:
+                    tool_type = 'maven'
+                elif 'jdk' in line:
+                    tool_type = 'jdk'
+
+                # Retrieve trigger value from between parentheses and single quotes
+                re_tools_pattern = r"(?:\'|\")(.*)(?:\'|\")"
+                tool_value = re.search(re_tools_pattern, line).group(1)
+                logger.debug('LINE: %s', line)
+                logger.debug('ADDING TOOL:  %s = %s', tool_type, tool_value)
+                tools_found.append({'ToolType': tool_type, 'ToolVersion': tool_value, 'Occurrence': num_tools})
+
+            '''
+            if 'stage' in line and 'stages' not in line:
+                num_stages += 1
+                re_stages_pattern = r"stage\s*\(*\s*\'*\"*([A-Za-z]*)\'*\"*\s*\)*"
+                stage_name = re.search(re_stages_pattern, line).group(1)
+                logger.debug('LINE: %s', line)
+                logger.debug('ADDING STAGE:  %s, Occurrence: %s', stage_name, num_stages)
+                stages_found.append({'Name': stage_name, 'Occurrence': num_stages})
+            '''
+
+    logger.debug('TOOLS FOUND: %s', tools_found)
+    # logger.debug('STAGES: %s', stages_found)
+    return tools_found, num_tools
 
 # TODO Add function documentation
 def search_and_download_jenkinsfiles(query, num_results):
@@ -208,12 +254,65 @@ def analyze_research_question1():
     print(df)
 
 
+def analyze_research_question_tools():
+    logger.info('Analyzing for Research Question 2: What types of tools are used in the pipeline?')
+
+    # Create DataFrame to store all data
+    df_headers = ['Username', 'RepositoryName', 'ToolType', 'ToolVersion', 'TriggerOccurrence']
+    df = project_utils.create_df(df_headers)
+
+    # Create Query and Search GitHub
+    query = "filename:jenkinsfile q=pipeline tools"
+    num_results = 10
+    repo_data = search_and_download_jenkinsfiles(query, num_results)
+
+    for repo in repo_data:
+        username = repo['Username']
+        repo_name = repo['RepoName']
+
+        jenkinsfile_path = repo['Jenkinsfile_Path']
+
+        # Confirm Jenkinsfile does exist TODO error/exception handling...skip the file
+        logger.info('%s exists? %s', jenkinsfile_path, os.path.isfile(jenkinsfile_path))
+
+        # Parse triggers and stages from file
+        triggers_data, num_triggers = parse_tools(jenkinsfile_path)
+        triggers_datum = list(triggers_data)
+        # Store parsed data in DataFrame for analyzing
+        #combined_data = list(itertools.zip_longest(triggers_data, stages_data))
+        iteration = 0
+        for tool in triggers_data:
+            #tool = data
+            trigger_type = ''
+            trigger_value = ''
+            trigger_occurrence = ''
+            if tool is not None:
+                trigger_type = tool['ToolType']
+                trigger_value = tool['ToolVersion']
+                trigger_occurrence = tool['Occurrence']
+
+            new_row = [[username, repo_name, trigger_type, trigger_value, trigger_occurrence]]
+            logger.debug("username: %s repo name: %s tool type: %s tool value: %s tool occurrence: %s",
+                         username, repo_name, trigger_type, trigger_value, trigger_occurrence)
+            df = project_utils.add_row_to_df(df, df_headers, new_row)
+
+            if iteration == 0:
+                username = ''
+                repo_name = ''
+
+            iteration += 1
+
+    print(df)
+
 def main():
     configure_logger()
     authenticate_github_object()
 
     # Research Question #1
     analyze_research_question1()
+
+    # Research Question #2
+    analyze_research_question_tools()
 
 
 if __name__ == '__main__':
