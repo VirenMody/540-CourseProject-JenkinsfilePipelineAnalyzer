@@ -85,9 +85,14 @@ def parse_triggers_and_stages(jenkinsfile):
     stage_name = ''
     num_stages = 0
 
-    with open(jenkinsfile) as file:
+    with open(jenkinsfile, errors='replace') as file:
         for line in file:
             line = line.strip('\n')
+
+            # Skip files that use the 'pipelineTriggers' format
+            if 'pipelineTriggers' in line:
+                return None, None, None, None
+
             if any(trig in line for trig in triggers):
                 num_triggers += 1
 
@@ -99,17 +104,17 @@ def parse_triggers_and_stages(jenkinsfile):
                     trigger_type = 'upstream'
 
                 # Retrieve trigger value from between parentheses and single quotes
-                re_triggers_pattern = r"[A-Za-z]*\(\'*\"*(.+?)\'*\"*\)"
-                trigger_value = re.search(re_triggers_pattern, line).group(1)
+                re_triggers_pattern = r"(?:'|\")(.*)(?:'|\")"
                 logger.debug('LINE: %s', line)
+                trigger_value = re.search(re_triggers_pattern, line).group(1)
                 logger.debug('ADDING TRIGGER:  %s = %s', trigger_type, trigger_value)
                 triggers_found.append({'Type': trigger_type, 'Value': trigger_value, 'Occurrence': num_triggers})
 
             if 'stage' in line and 'stages' not in line:
                 num_stages += 1
-                re_stages_pattern = r"stage\s*\(*\s*\'*\"*([A-Za-z]*)\'*\"*\s*\)*"
-                stage_name = re.search(re_stages_pattern, line).group(1)
+                re_stages_pattern = r"(?:'|\")(.*)(?:'|\")"
                 logger.debug('LINE: %s', line)
+                stage_name = re.search(re_stages_pattern, line).group(1)
                 logger.debug('ADDING STAGE:  %s, Occurrence: %s', stage_name, num_stages)
                 stages_found.append({'Name': stage_name, 'Occurrence': num_stages})
 
@@ -118,8 +123,13 @@ def parse_triggers_and_stages(jenkinsfile):
     return triggers_found, stages_found, num_stages, num_triggers
 
 
-# TODO Add function documentation
 def search_and_download_jenkinsfiles(query, num_results):
+    """
+    Function searches GitHub for Jenkinsfiles with the given parameters and downloads them
+    :param query: search query for jenkinsfiles
+    :param num_results: number of results desired from search
+    :return: repo_data: a list of data for each repo: username, repo-name, and path to downloaded jenkinsfile
+    """
 
     # Results are returned in tuples: ((github_object, raw_url))
     results = project_utils.search_by_code(git_hub, query, num_results)
@@ -130,7 +140,7 @@ def search_and_download_jenkinsfiles(query, num_results):
     for i in range(0, len(results)):
         res = requests.get(results[i][1])
         # print text of result
-        logger.debug(res.text)
+        # logger.debug(res.text)
         # print the whole folder name
         logger.debug(results[i][2])
         github_repo_name = results[i][2]
@@ -153,9 +163,8 @@ def search_and_download_jenkinsfiles(query, num_results):
 
 def analyze_research_question1():
     """
-    Function downloads Jenkinsfiles, parses it, and analyzes the data to answer:
+    Function retrieves Jenkinsfiles, parses it, and analyzes the data to answer:
     Research Question #1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?
-    :return:
     """
 
     logger.info('Analyzing for Research Question 1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?')
@@ -166,13 +175,14 @@ def analyze_research_question1():
 
     # Create Query and Search GitHub
     query = "filename:jenkinsfile q=pipeline triggers stages"
-    num_results = 10
+    num_results = 100
     repo_data = search_and_download_jenkinsfiles(query, num_results)
 
-    for repo_num, repo in enumerate(repo_data):
+    repo_num = 0
+    for repo in repo_data:
+        repo_num += 1
         username = repo['Username']
         repo_name = repo['RepoName']
-
         jenkinsfile_path = repo['Jenkinsfile_Path']
 
         # Confirm Jenkinsfile does exist TODO error/exception handling...skip the file
@@ -180,6 +190,9 @@ def analyze_research_question1():
 
         # Parse triggers and stages from file
         triggers_data, stages_data, num_stages, num_triggers = parse_triggers_and_stages(jenkinsfile_path)
+
+        if triggers_data is None:
+            continue
 
         # Store parsed data in DataFrame for analyzing
         combined_data = list(itertools.zip_longest(triggers_data, stages_data))
@@ -198,13 +211,14 @@ def analyze_research_question1():
                 stage_name = stage['Name']
                 stage_occurrence = stage['Occurrence']
 
-            new_row = [[repo_num, username, repo_name, trigger_type, trigger_value, trigger_occurrence, stage_name, stage_occurrence]]
+            repo_num_str = str(repo_num) if iteration == 0 else ''
+
+            new_row = [[repo_num_str, username, repo_name, trigger_type, trigger_value, trigger_occurrence, stage_name, stage_occurrence]]
             df = project_utils.add_row_to_df(df, df_headers, new_row)
 
             if iteration == 0:
                 username = ''
                 repo_name = ''
-                repo_num = ''
 
         # Insert blank row for increased readability
         df = project_utils.add_blank_row_to_df(df, df_headers)
