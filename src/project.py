@@ -9,7 +9,7 @@ import numpy
 
 import project_utils
 
-
+# TODO Make sure code is commented and logged properly
 # TODO Skip invalid Jenkinsfiles (i.e. empty, imbalanced brackets, starts with pipeline or node)
 # TODO For each research question, put together a list of repositories with good Jenkinsfiles
 
@@ -38,10 +38,13 @@ def configure_logger():
     ERROR	Due to a more serious problem, the software has not been able to perform some function.
     CRITICAL	A serious error, indicating that the program itself may be unable to continue running.
     """
+
+    # TODO change logger level to your preference
     LOG_FILENAME = 'project.log'
     logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(levelname)s:%(filename)s: In %(funcName)s(): On Line: %(lineno)d: %(message)s')
 
+    # Setup output log to console and to a file
     file_handler = logging.FileHandler(LOG_FILENAME)
     stream_handler = logging.StreamHandler()
     file_handler.setFormatter(formatter)
@@ -228,8 +231,8 @@ def analyze_research_question1():
     df = project_utils.create_df(df_headers)
 
     # Create Query and Search GitHub
-    query = "filename:jenkinsfile q=pipeline triggers stages agent post"
-    num_results = 100
+    query = "filename:jenkinsfile q=pipeline triggers stages"
+    num_results = 50
     repo_data = search_and_download_jenkinsfiles(query, num_results)
 
     stage_counts = []
@@ -282,10 +285,10 @@ def analyze_research_question1():
         # Insert blank row for increased readability
         df = project_utils.add_blank_row_to_df(df, df_headers)
 
-    print(len(trigger_counts), ':', trigger_counts)
-    print(len(stage_counts), ':', stage_counts)
-    print(numpy.corrcoef(trigger_counts, stage_counts))
-    print(numpy.corrcoef(trigger_counts, stage_counts)[0,1])
+    logger.debug('Trigger Counts: %d:%s', len(trigger_counts), trigger_counts)
+    logger.debug('Stage Counts:   %d:%s', len(stage_counts), stage_counts)
+    correlation_coefficient = round(numpy.corrcoef(trigger_counts, stage_counts)[0, 1], 5)
+    logger.info('Pearson Correlation Coefficient between Trigger and Stage Counts: %s', correlation_coefficient)
 
     # Write DataFrame to CSV file
     df.to_csv('analysis.csv', sep=',', na_rep='', index=False)
