@@ -1,5 +1,3 @@
-from time import sleep
-
 from github3 import GitHub
 import requests
 import pathlib
@@ -122,6 +120,7 @@ def parse_triggers_and_stages(jenkinsfile):
     logger.debug('STAGES: %s', stages_found)
     return triggers_found, stages_found, num_stages, num_triggers
 
+
 def parse_tools(jenkinsfile):
     """
     Function parses jenkinsfile for trigger and stage counts and info
@@ -168,6 +167,7 @@ def parse_tools(jenkinsfile):
     logger.debug('TOOLS FOUND: %s', tools_found)
     # logger.debug('STAGES: %s', stages_found)
     return tools_found, num_tools
+
 
 def search_and_download_jenkinsfiles(query, num_results):
     """
@@ -298,10 +298,10 @@ def analyze_research_question_tools():
         triggers_data, num_triggers = parse_tools(jenkinsfile_path)
         triggers_datum = list(triggers_data)
         # Store parsed data in DataFrame for analyzing
-        #combined_data = list(itertools.zip_longest(triggers_data, stages_data))
+        # combined_data = list(itertools.zip_longest(triggers_data, stages_data))
         iteration = 0
         for tool in triggers_data:
-            #tool = data
+            # tool = data
             trigger_type = ''
             trigger_value = ''
             trigger_occurrence = ''
@@ -322,6 +322,7 @@ def analyze_research_question_tools():
             iteration += 1
 
     print(df)
+
 
 def main():
     configure_logger()
