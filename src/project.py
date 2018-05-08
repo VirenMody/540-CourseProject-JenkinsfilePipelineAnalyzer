@@ -238,6 +238,7 @@ def analyze_research_question1():
         triggers_data, stages_data, num_stages, num_triggers = parse_triggers_and_stages(jenkinsfile_path)
 
         if triggers_data is None:
+            repo_num -= 1
             continue
 
         # Store parsed data in DataFrame for analyzing
