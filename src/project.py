@@ -85,37 +85,44 @@ def parse_triggers_and_stages(jenkinsfile):
     num_stages = 0
 
     with open(jenkinsfile, errors='replace') as file:
-        for line in file:
-            line = line.strip('\n')
+        try:
+            for line in file:
+                line = line.strip('\n')
 
-            # Skip files that use the 'pipelineTriggers' format
-            if 'pipelineTriggers' in line:
-                return None, None, None, None
+                # Skip files that use the 'pipelineTriggers' format
+                if 'pipelineTriggers' in line:
+                    return None, None, None, None
 
-            if any(trig in line for trig in triggers):
-                num_triggers += 1
+                if any(trig in line for trig in triggers):
+                    num_triggers += 1
 
-                if 'cron' in line:
-                    trigger_type = 'cron'
-                elif 'pollSCM' in line:
-                    trigger_type = 'pollSCM'
-                elif 'upstream' in line:
-                    trigger_type = 'upstream'
+                    if 'cron' in line:
+                        trigger_type = 'cron'
+                    elif 'pollSCM' in line:
+                        trigger_type = 'pollSCM'
+                    elif 'upstream' in line:
+                        trigger_type = 'upstream'
 
-                # Retrieve trigger value from between parentheses and single quotes
-                re_triggers_pattern = r"(?:'|\")(.*)(?:'|\")"
-                logger.debug('LINE: %s', line)
-                trigger_value = re.search(re_triggers_pattern, line).group(1)
-                logger.debug('ADDING TRIGGER:  %s = %s', trigger_type, trigger_value)
-                triggers_found.append({'Type': trigger_type, 'Value': trigger_value, 'Occurrence': num_triggers})
+                    # Retrieve trigger value from between parentheses and single quotes
+                    re_triggers_pattern = r"(?:'|\")(.*)(?:'|\")"
+                    logger.debug('LINE: %s', line)
+                    trigger_value = re.search(re_triggers_pattern, line).group(1)
+                    logger.debug('ADDING TRIGGER:  %s = %s', trigger_type, trigger_value)
+                    triggers_found.append({'Type': trigger_type, 'Value': trigger_value, 'Occurrence': num_triggers})
 
-            if 'stage' in line and 'stages' not in line:
-                num_stages += 1
-                re_stages_pattern = r"(?:'|\")(.*)(?:'|\")"
-                logger.debug('LINE: %s', line)
-                stage_name = re.search(re_stages_pattern, line).group(1)
-                logger.debug('ADDING STAGE:  %s, Occurrence: %s', stage_name, num_stages)
-                stages_found.append({'Name': stage_name, 'Occurrence': num_stages})
+                if 'stage' in line and 'stages' not in line:
+                    num_stages += 1
+                    re_stages_pattern = r"(?:'|\")(.*)(?:'|\")"
+                    logger.debug('LINE: %s', line)
+                    stage_name = re.search(re_stages_pattern, line).group(1)
+                    logger.debug('ADDING STAGE:  %s, Occurrence: %s', stage_name, num_stages)
+                    stages_found.append({'Name': stage_name, 'Occurrence': num_stages})
+        except AttributeError as error:
+            logger.error(error)
+            return None, None, None, None
+        except Exception as exception:
+            logger.error(exception)
+            return None, None, None, None
 
     logger.debug('TRIGGERS: %s', triggers_found)
     logger.debug('STAGES: %s', stages_found)
@@ -278,6 +285,7 @@ def analyze_research_question1():
     print(len(trigger_counts), ':', trigger_counts)
     print(len(stage_counts), ':', stage_counts)
     print(numpy.corrcoef(trigger_counts, stage_counts))
+    print(numpy.corrcoef(trigger_counts, stage_counts)[0,1])
 
     # Write DataFrame to CSV file
     df.to_csv('analysis.csv', sep=',', na_rep='', index=False)
