@@ -5,6 +5,7 @@ import itertools
 import logging
 import os
 import re  # regex
+import numpy
 
 import project_utils
 
@@ -118,7 +119,7 @@ def parse_triggers_and_stages(jenkinsfile):
 
     logger.debug('TRIGGERS: %s', triggers_found)
     logger.debug('STAGES: %s', stages_found)
-    return triggers_found, stages_found, num_stages, num_triggers
+    return triggers_found, stages_found, num_triggers, num_stages
 
 
 def parse_tools(jenkinsfile):
@@ -220,10 +221,12 @@ def analyze_research_question1():
     df = project_utils.create_df(df_headers)
 
     # Create Query and Search GitHub
-    query = "filename:jenkinsfile q=pipeline triggers stages"
+    query = "filename:jenkinsfile q=pipeline triggers stages agent post"
     num_results = 100
     repo_data = search_and_download_jenkinsfiles(query, num_results)
 
+    stage_counts = []
+    trigger_counts = []
     repo_num = 0
     for repo in repo_data:
         repo_num += 1
@@ -235,11 +238,13 @@ def analyze_research_question1():
         logger.info('%s exists? %s', jenkinsfile_path, os.path.isfile(jenkinsfile_path))
 
         # Parse triggers and stages from file
-        triggers_data, stages_data, num_stages, num_triggers = parse_triggers_and_stages(jenkinsfile_path)
-
+        triggers_data, stages_data, num_triggers, num_stages = parse_triggers_and_stages(jenkinsfile_path)
         if triggers_data is None:
             repo_num -= 1
             continue
+
+        trigger_counts.append(num_triggers)
+        stage_counts.append(num_stages)
 
         # Store parsed data in DataFrame for analyzing
         combined_data = list(itertools.zip_longest(triggers_data, stages_data))
@@ -269,6 +274,10 @@ def analyze_research_question1():
 
         # Insert blank row for increased readability
         df = project_utils.add_blank_row_to_df(df, df_headers)
+
+    print(len(trigger_counts), ':', trigger_counts)
+    print(len(stage_counts), ':', stage_counts)
+    print(numpy.corrcoef(trigger_counts, stage_counts))
 
     # Write DataFrame to CSV file
     df.to_csv('analysis.csv', sep=',', na_rep='', index=False)
@@ -333,7 +342,7 @@ def main():
     analyze_research_question1()
 
     # Research Question #2
-    analyze_research_question_tools()
+    # analyze_research_question_tools()
 
 
 if __name__ == '__main__':
