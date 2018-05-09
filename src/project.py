@@ -257,7 +257,7 @@ def analyze_research_question_triggers_stages():
         jenkinsfile_path = repo['Jenkinsfile_Path']
 
         # Confirm Jenkinsfile does exist TODO error/exception handling...skip the file
-        logger.info('%s exists? %s', jenkinsfile_path, os.path.isfile(jenkinsfile_path))
+        logger.debug('%s exists? %s', jenkinsfile_path, os.path.isfile(jenkinsfile_path))
 
         # Parse triggers and stages from file
         triggers_data, stages_data, num_triggers, num_stages = parse_triggers_and_stages(jenkinsfile_path)
@@ -387,7 +387,7 @@ def main():
     analyze_research_question_triggers_stages()
 
     # Research Question #2
-    # analyze_research_question_tools()
+    analyze_research_question_tools()
 
 
 if __name__ == '__main__':
