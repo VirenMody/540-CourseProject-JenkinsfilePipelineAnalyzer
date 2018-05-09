@@ -6,6 +6,7 @@ import logging
 import os
 import re  # regex
 import numpy
+import csv
 
 import project_utils
 
@@ -19,7 +20,6 @@ CLONED_REPOS_DIR_PATH = 'C:/Users/Viren/Google Drive/1.UIC/540/guillermo_rojas_h
 
 # Global git_hub object
 git_hub = None
-
 
 # Retrieve logger to be used for both project.py and project_utils.py
 logger = logging.getLogger('project')
@@ -84,7 +84,6 @@ def parse_triggers_and_stages(jenkinsfile):
     num_triggers = 0
 
     stages_found = []
-    stage_name = ''
     num_stages = 0
 
     with open(jenkinsfile, errors='replace') as file:
@@ -143,9 +142,9 @@ def parse_tools(jenkinsfile):
     tool_type = ''
     num_tools = 0
 
-    #stages_found = []
-    #stage_name = ''
-    #num_stages = 0
+    # stages_found = []
+    # stage_name = ''
+    # num_stages = 0
 
     with open(jenkinsfile) as file:
         for line in file:
@@ -218,7 +217,7 @@ def search_and_download_jenkinsfiles(query, num_results):
     return repo_data
 
 
-def analyze_research_question1():
+def analyze_research_question_triggers_stages():
     """
     Function retrieves Jenkinsfiles, parses it, and analyzes the data to answer:
     Research Question #1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?
@@ -231,8 +230,8 @@ def analyze_research_question1():
     df = project_utils.create_df(df_headers)
 
     # Create Query and Search GitHub
-    query = "filename:jenkinsfile q=pipeline triggers stages"
-    num_results = 50
+    query = "filename:jenkinsfile q=pipeline triggers stage"
+    num_results = 100
     repo_data = search_and_download_jenkinsfiles(query, num_results)
 
     stage_counts = []
@@ -290,8 +289,19 @@ def analyze_research_question1():
     correlation_coefficient = round(numpy.corrcoef(trigger_counts, stage_counts)[0, 1], 5)
     logger.info('Pearson Correlation Coefficient between Trigger and Stage Counts: %s', correlation_coefficient)
 
+    csv_file = 'research_question_1.csv'
+    csv_header = [['Research Question 1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?'],
+                  ['Correlation Coefficient: ' + str(correlation_coefficient)],
+                  ['\n'],
+                  ['Parsed Jenkinsfile Data']]
+
+    # Write to CSV file
+    with open(csv_file, 'w+') as analysisFile:
+        cw = csv.writer(analysisFile, dialect='excel', lineterminator='\n')
+        cw.writerows(csv_header)
+
     # Write DataFrame to CSV file
-    df.to_csv('analysis.csv', sep=',', na_rep='', index=False)
+    df.to_csv(csv_file, mode='a', header='false', sep=',', na_rep='', index=False)
 
 
 def analyze_research_question_tools():
@@ -349,11 +359,11 @@ def main():
     configure_logger()
     authenticate_github_object()
 
-    # Research Question #1
-    analyze_research_question1()
+    # Research Question #1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?
+    analyze_research_question_triggers_stages()
 
     # Research Question #2
-    # analyze_research_question_tools()
+    analyze_research_question_tools()
 
 
 if __name__ == '__main__':
