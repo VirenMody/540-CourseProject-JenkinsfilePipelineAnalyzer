@@ -387,15 +387,117 @@ def analyze_research_question_tools():
     print(df)
 
 
+def analyze_research_questions_artifacts():
+    """
+    Function retrieves Jenkinsfiles, parses it, and analyzes the data to answer:
+    Research Question #3: In which pipeline sections or pipeline directives are artifacts most frequently and least frequently archived?
+    Research Question #4: Which file extensions are most frequently and least frequent archived?(.exe, .jar, everything, etc.)
+    Research Question #5: What percentage of archived artifacts are archived with a fingerprint?
+    """
+
+    logger.info('Analyzing Jenkinsfiles for Research Question 1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?')
+
+    # Create DataFrame to store all data
+    df_headers = ['RepoNum', 'Username', 'RepositoryName', 'Artifact', 'Extension', 'Fingerprint', 'OnlyIfSuccessful', 'InSection', 'SectionName']
+    df = project_utils.create_df(df_headers)
+
+    # Query for GitHub Jenkinsfile search ('pipeline' is used because our focus is on declarative pipeline syntax): TODO Change num_results as per your preference
+    query = "filename:jenkinsfile q=pipeline archiveartifacts"
+    num_results = 10
+    repo_data = search_and_download_jenkinsfiles(query, num_results)
+    logger.info('Results received from search: %s', repo_data)
+    #
+    # # For each repo from the search results, parse the Jenkinsfile for trigger and stage data, and store it for analysis
+    # stage_counts = []
+    # trigger_counts = []
+    # repo_num = 0
+    # for repo in repo_data:
+    #     repo_num += 1
+    #     username = repo['Username']
+    #     repo_name = repo['RepoName']
+    #     jenkinsfile_path = repo['Jenkinsfile_Path']
+    #
+    #     # Confirm Jenkinsfile does exist TODO error/exception handling...skip the file
+    #     logger.debug('%s exists? %s', jenkinsfile_path, os.path.isfile(jenkinsfile_path))
+    #
+    #     # Parse triggers and stages from file
+    #     triggers_data, stages_data, num_triggers, num_stages = parse_triggers_and_stages(jenkinsfile_path)
+    #
+    #     # Skip repositories that don't use typical declarative pipeline syntax or cause parsing errors
+    #     if triggers_data is None:
+    #         repo_num -= 1
+    #         continue
+    #
+    #     # Store trigger and stage counts to calculate correlation coefficient
+    #     trigger_counts.append(num_triggers)
+    #     stage_counts.append(num_stages)
+    #
+    #     # Store parsed data in DataFrame for analyzing
+    #     combined_data = list(itertools.zip_longest(triggers_data, stages_data))
+    #     for iteration, data in enumerate(combined_data):
+    #         trigger, stage = data
+    #         trigger_type = ''
+    #         trigger_value = ''
+    #         trigger_occurrence = ''
+    #         stage_name = ''
+    #         stage_occurrence = 0
+    #         if trigger is not None:
+    #             trigger_type = trigger['Type']
+    #             trigger_value = trigger['Value']
+    #             trigger_occurrence = trigger['Occurrence']
+    #         if stage is not None:
+    #             stage_name = stage['Name']
+    #             stage_occurrence = stage['Occurrence']
+    #
+    #         repo_num_str = str(repo_num) if iteration == 0 else ''
+    #
+    #         # Add parsed data to DataFrame
+    #         new_row = [[repo_num_str, username, repo_name, trigger_type, trigger_value, trigger_occurrence, stage_name, stage_occurrence]]
+    #         df = project_utils.add_row_to_df(df, df_headers, new_row)
+    #
+    #         # Do not repeat username and repo_name for output readability
+    #         if iteration == 0:
+    #             username = ''
+    #             repo_name = ''
+    #
+    #     # Insert blank row for increased readability
+    #     df = project_utils.add_blank_row_to_df(df, df_headers)
+    #
+    # logger.debug('Trigger Counts: %d:%s', len(trigger_counts), trigger_counts)
+    # logger.debug('Stage Counts:   %d:%s', len(stage_counts), stage_counts)
+    # correlation_coefficient = round(numpy.corrcoef(trigger_counts, stage_counts)[0, 1], 5)
+    # logger.info('Pearson Correlation Coefficient between Trigger and Stage Counts: %s', correlation_coefficient)
+    #
+    # csv_file = 'research_question_stages_triggers.csv'
+    # csv_header = [['Research Question 1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?'],
+    #               ['Correlation Coefficient: ' + str(correlation_coefficient)],
+    #               ['\n'],
+    #               ['Parsed Jenkinsfile Data']]
+    #
+    # # Write to CSV file
+    # with open(csv_file, 'w+') as analysisFile:
+    #     cw = csv.writer(analysisFile, dialect='excel', lineterminator='\n')
+    #     cw.writerows(csv_header)
+    #
+    # # Write DataFrame to CSV file
+    # df.to_csv(csv_file, mode='a', header='false', sep=',', na_rep='', index=False)
+    # logger.info('Results written in /src folder to \'%s\' for \n\t\t\t\t\tResearch Question 1: How does the number of triggers in a pipeline correlate with the number of stages '
+    #             'in the pipeline?', csv_file)
+
+
 def main():
     configure_logger()
     authenticate_github_object()
 
     # Research Question #1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?
-    analyze_research_question_triggers_stages()
+    # analyze_research_question_triggers_stages()
 
     # Research Question #2
     analyze_research_question_tools()
+
+    # TODO Update this comment
+    # Research Questions #3, 4, 5
+    analyze_research_questions_artifacts()
 
 
 if __name__ == '__main__':
