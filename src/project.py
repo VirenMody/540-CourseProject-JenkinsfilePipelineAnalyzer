@@ -78,6 +78,8 @@ def parse_triggers_and_stages(jenkinsfile):
     :param jenkinsfile: path to Jenkinsfile to parse
     :return: list of triggers, list of stages and number of triggers and stages
     """
+
+    logger.debug('Parsing Jenkinsfile: %s', jenkinsfile)
     triggers = ['cron', 'pollSCM', 'upstream']
     triggers_found = []
     trigger_type = ''
@@ -86,6 +88,7 @@ def parse_triggers_and_stages(jenkinsfile):
     stages_found = []
     num_stages = 0
 
+    # Parse the Jenkinsfile line by line searching for keywords relevant to triggers and stages
     with open(jenkinsfile, errors='replace') as file:
         try:
             for line in file:
@@ -95,6 +98,7 @@ def parse_triggers_and_stages(jenkinsfile):
                 if 'pipelineTriggers' in line:
                     return None, None, None, None
 
+                # Parse and store data containing any of the 3 triggers: cron, pollSCM, upstream
                 if any(trig in line for trig in triggers):
                     num_triggers += 1
 
@@ -105,20 +109,25 @@ def parse_triggers_and_stages(jenkinsfile):
                     elif 'upstream' in line:
                         trigger_type = 'upstream'
 
-                    # Retrieve trigger value from between parentheses and single quotes
+                    # Retrieve trigger value/argument from between parentheses and/or single or double quotes
                     re_triggers_pattern = r"(?:'|\")(.*)(?:'|\")"
                     logger.debug('LINE: %s', line)
                     trigger_value = re.search(re_triggers_pattern, line).group(1)
                     logger.debug('ADDING TRIGGER:  %s = %s', trigger_type, trigger_value)
                     triggers_found.append({'Type': trigger_type, 'Value': trigger_value, 'Occurrence': num_triggers})
 
-                if 'stage' in line and 'stages' not in line:
+                # Parse and store data containing stage
+                elif 'stage' in line and 'stages' not in line:
                     num_stages += 1
+
+                    # Retrieve stage name from between parentheses and/or single or double quotes
                     re_stages_pattern = r"(?:'|\")(.*)(?:'|\")"
                     logger.debug('LINE: %s', line)
                     stage_name = re.search(re_stages_pattern, line).group(1)
                     logger.debug('ADDING STAGE:  %s, Occurrence: %s', stage_name, num_stages)
                     stages_found.append({'Name': stage_name, 'Occurrence': num_stages})
+
+        # Catch AttributeErrors: Most commonly occurs when the above keywords are found in a context other than designed for (i.e. the word 'stage' is found in the comments)
         except AttributeError as error:
             logger.error(error)
             return None, None, None, None
@@ -188,8 +197,9 @@ def search_and_download_jenkinsfiles(query, num_results):
     """
 
     # Results are returned in tuples: ((github_object, raw_url))
+    logger.info('Searching GitHub for %s results with query: %s', num_results, query)
     results = project_utils.search_by_code(git_hub, query, num_results)
-    logger.info("Results from hw3_utils.search_by_code: %s", results)
+    logger.debug("Results from project.search_by_code: %s", results)
 
     repo_data = []
     # Get file contents of all results (raw url is second item in tuple: results[i][1])
@@ -200,10 +210,11 @@ def search_and_download_jenkinsfiles(query, num_results):
         # print the whole folder name
         logger.debug(results[i][2])
         github_repo_name = results[i][2]
-        path_to_file = CLONED_REPOS_DIR_PATH + github_repo_name
-        pathlib.Path(path_to_file).mkdir(parents=True, exist_ok=True)
+        path_to_repo = CLONED_REPOS_DIR_PATH + github_repo_name
+        pathlib.Path(path_to_repo).mkdir(parents=True, exist_ok=True)
 
-        jenkinsfile_path = path_to_file + '/' + 'Jenkinsfile'
+        # Write file contents back to Jenkinsfile
+        jenkinsfile_path = path_to_repo + '/' + 'Jenkinsfile'
         with open(jenkinsfile_path, "wb") as file:
             file.write(res.content)
 
@@ -229,11 +240,13 @@ def analyze_research_question_triggers_stages():
     df_headers = ['RepoNum', 'Username', 'RepositoryName', 'TriggerType', 'TriggerValue', 'TriggerOccurrence', 'StageName', 'StageOccurrence']
     df = project_utils.create_df(df_headers)
 
-    # Create Query and Search GitHub
+    # Query for GitHub Jenkinsfile search ('pipeline' is used because our focus is on declarative pipeline syntax): TODO Change num_results as per your preference
     query = "filename:jenkinsfile q=pipeline triggers stage"
     num_results = 100
     repo_data = search_and_download_jenkinsfiles(query, num_results)
+    logger.info('Results received from search: %s', repo_data)
 
+    # For each repo from the search results, parse the Jenkinsfile for trigger and stage data, and store it for analysis
     stage_counts = []
     trigger_counts = []
     repo_num = 0
@@ -248,10 +261,13 @@ def analyze_research_question_triggers_stages():
 
         # Parse triggers and stages from file
         triggers_data, stages_data, num_triggers, num_stages = parse_triggers_and_stages(jenkinsfile_path)
+
+        # Skip repositories that don't use typical declarative pipeline syntax or cause parsing errors
         if triggers_data is None:
             repo_num -= 1
             continue
 
+        # Store trigger and stage counts to calculate correlation coefficient
         trigger_counts.append(num_triggers)
         stage_counts.append(num_stages)
 
@@ -274,9 +290,11 @@ def analyze_research_question_triggers_stages():
 
             repo_num_str = str(repo_num) if iteration == 0 else ''
 
+            # Add parsed data to DataFrame
             new_row = [[repo_num_str, username, repo_name, trigger_type, trigger_value, trigger_occurrence, stage_name, stage_occurrence]]
             df = project_utils.add_row_to_df(df, df_headers, new_row)
 
+            # Do not repeat username and repo_name for output readability
             if iteration == 0:
                 username = ''
                 repo_name = ''
@@ -289,7 +307,7 @@ def analyze_research_question_triggers_stages():
     correlation_coefficient = round(numpy.corrcoef(trigger_counts, stage_counts)[0, 1], 5)
     logger.info('Pearson Correlation Coefficient between Trigger and Stage Counts: %s', correlation_coefficient)
 
-    csv_file = 'research_question_1.csv'
+    csv_file = 'research_question_stages_triggers.csv'
     csv_header = [['Research Question 1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?'],
                   ['Correlation Coefficient: ' + str(correlation_coefficient)],
                   ['\n'],
@@ -302,9 +320,15 @@ def analyze_research_question_triggers_stages():
 
     # Write DataFrame to CSV file
     df.to_csv(csv_file, mode='a', header='false', sep=',', na_rep='', index=False)
+    logger.info('Results written to csv file for Research Question 1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?')
 
 
+# TODO Function documentation comments
 def analyze_research_question_tools():
+    """
+
+    :return:
+    """
     logger.info('Analyzing for Research Question 2: What types of tools are used in the pipeline?')
 
     # Create DataFrame to store all data
@@ -363,7 +387,7 @@ def main():
     analyze_research_question_triggers_stages()
 
     # Research Question #2
-    analyze_research_question_tools()
+    # analyze_research_question_tools()
 
 
 if __name__ == '__main__':
