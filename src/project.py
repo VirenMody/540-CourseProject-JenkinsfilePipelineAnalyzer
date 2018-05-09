@@ -11,6 +11,8 @@ import csv
 import project_utils
 
 # TODO Artifacts Research Questions - Maybe correlation between tools and artifact file extensions?
+# TODO What is the correlation between the presence of disableconcurrentbuilds() and hashes in triggers?
+# TODO Research question involving Slack
 # TODO Skip lines that start with comments??
 # TODO Make sure code is commented and logged properly
 # TODO Skip invalid Jenkinsfiles (i.e. empty, imbalanced brackets, starts with pipeline or node)
@@ -95,8 +97,8 @@ def parse_triggers_and_stages(jenkinsfile):
     num_stages = 0
 
     # Parse the Jenkinsfile line by line searching for keywords relevant to triggers and stages
-    with open(jenkinsfile, errors='replace') as file:
-        try:
+    try:
+        with open(jenkinsfile, errors='replace') as file:
             for line in file:
                 line = line.strip('\n')
 
@@ -133,13 +135,13 @@ def parse_triggers_and_stages(jenkinsfile):
                     logger.debug('ADDING STAGE:  %s, Occurrence: %s', stage_name, num_stages)
                     stages_found.append({'Name': stage_name, 'Occurrence': num_stages})
 
-        # Catch AttributeErrors: Most commonly occurs when the above keywords are found in a context other than designed for (i.e. the word 'stage' is found in the comments)
-        except AttributeError as error:
-            logger.error('%s: SKIPPING THIS JENKINSFILE', error)
-            return None, None, None, None
-        except Exception as exception:
-            logger.error('%s: SKIPPING THIS JENKINSFILE', exception)
-            return None, None, None, None
+    # Catch AttributeErrors: Most commonly occurs when the above keywords are found in a context other than designed for (i.e. the word 'stage' is found in the comments)
+    except AttributeError as error:
+        logger.error('%s: SKIPPING THIS JENKINSFILE', error)
+        return None, None, None, None
+    except Exception as exception:
+        logger.error('%s: SKIPPING THIS JENKINSFILE', exception)
+        return None, None, None, None
 
     logger.debug('TRIGGERS: %s', triggers_found)
     logger.debug('STAGES: %s', stages_found)
@@ -394,6 +396,68 @@ def analyze_research_question_tools():
     print(df)
 
 
+def parse_archiveArtifacts(jenkinsfile):
+    """
+    Function parses jenkinsfile for 'archiveArtifacts' data: What artifacts are being archived, artifact file extensions, which sections artifacts are being archived,
+    fingerprint attribute, and onlyIfSuccessful
+    :param jenkinsfile: path to Jenkinsfile to parse
+    :return: TODO determine return type
+    """
+
+    logger.debug('Parsing Jenkinsfile: %s', jenkinsfile)
+
+    # Parse the Jenkinsfile line by line searching for 'archiveArtifacts' keyword and relevant keywords (i.e fingerprint)
+    try:
+        with open(jenkinsfile, errors='replace') as file:
+            for line in file:
+                line = line.strip('\n')
+
+                # Skip files that use the 'pipelineTriggers' format
+                if 'pipelineTriggers' in line:
+                    return None, None, None, None
+
+                # Parse and store data containing any of the 3 triggers: cron, pollSCM, upstream
+                if any(trig in line for trig in triggers):
+                    num_triggers += 1
+
+                    if 'cron' in line:
+                        trigger_type = 'cron'
+                    elif 'pollSCM' in line:
+                        trigger_type = 'pollSCM'
+                    elif 'upstream' in line:
+                        trigger_type = 'upstream'
+
+                    # Retrieve trigger value/argument from between parentheses and/or single or double quotes
+                    re_triggers_pattern = r"(?:'|\")(.*)(?:'|\")"
+                    logger.debug('LINE: %s', line)
+                    trigger_value = re.search(re_triggers_pattern, line).group(1)
+                    logger.debug('ADDING TRIGGER:  %s = %s', trigger_type, trigger_value)
+                    triggers_found.append({'Type': trigger_type, 'Value': trigger_value, 'Occurrence': num_triggers})
+
+                # Parse and store data containing stage
+                elif 'stage' in line and 'stages' not in line:
+                    num_stages += 1
+
+                    # Retrieve stage name from between parentheses and/or single or double quotes
+                    re_stages_pattern = r"(?:'|\")(.*)(?:'|\")"
+                    logger.debug('LINE: %s', line)
+                    stage_name = re.search(re_stages_pattern, line).group(1)
+                    logger.debug('ADDING STAGE:  %s, Occurrence: %s', stage_name, num_stages)
+                    stages_found.append({'Name': stage_name, 'Occurrence': num_stages})
+
+    # Catch AttributeErrors: Most commonly occurs when the above keywords are found in a context other than designed for (i.e. the word 'stage' is found in the comments)
+    except AttributeError as error:
+        logger.error('%s: SKIPPING THIS JENKINSFILE', error)
+        return None, None, None, None
+    except Exception as exception:
+        logger.error('%s: SKIPPING THIS JENKINSFILE', exception)
+        return None, None, None, None
+
+    logger.debug('TRIGGERS: %s', triggers_found)
+    logger.debug('STAGES: %s', stages_found)
+    return triggers_found, stages_found, num_triggers, num_stages
+
+
 def analyze_research_questions_artifacts():
     """
     Function retrieves Jenkinsfiles, parses it, and analyzes the data to answer:
@@ -407,7 +471,7 @@ def analyze_research_questions_artifacts():
                 'What percentage of archived artifacts are archived with a fingerprint?')
 
     # Create DataFrame to store all data
-    df_headers = ['RepoNum', 'Username', 'RepositoryName', 'Artifact', 'Extension', 'Fingerprint', 'OnlyIfSuccessful', 'InSection', 'SectionName']
+    df_headers = ['RepoNum', 'Username', 'RepositoryName', 'Artifact', 'Extension', 'fingerprint', 'onlyIfSuccessful', 'InSection', 'SectionName']
     df = project_utils.create_df(df_headers)
 
     # Query for GitHub Jenkinsfile search ('pipeline' is used because our focus is on declarative pipeline syntax): TODO Change num_results as per your preference
@@ -416,7 +480,7 @@ def analyze_research_questions_artifacts():
     repo_data = search_and_download_jenkinsfiles(query, num_results)
     logger.info('Results received from search: %s', repo_data)
 
-    # For each repo from the search results, parse the Jenkinsfile for data on 'archivedartifacts', and store it for analysis
+    # For each repo from the search results, parse the Jenkinsfile for data on 'archiveArtifacts', and store it for analysis
     repo_num = 0
     for repo in repo_data:
         repo_num += 1
@@ -430,8 +494,8 @@ def analyze_research_questions_artifacts():
             repo_num -= 1
             continue
 
-        # Parse triggers and stages from file
-        triggers_data, stages_data, num_triggers, num_stages = parse_triggers_and_stages(jenkinsfile_path)
+        # Parse 'archiveArtifacts' data from Jenkinsfile
+        parse_archiveArtifacts(jenkinsfile_path)
 
         # Skip repositories that don't use typical declarative pipeline syntax or cause parsing errors
         if triggers_data is None:
