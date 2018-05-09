@@ -10,13 +10,18 @@ import csv
 
 import project_utils
 
+# TODO Skip lines that start with comments??
 # TODO Make sure code is commented and logged properly
 # TODO Skip invalid Jenkinsfiles (i.e. empty, imbalanced brackets, starts with pipeline or node)
-# TODO For each research question, put together a list of repositories with good Jenkinsfiles
+# TODO MAYBE - For each research question, put together a list of repositories with good Jenkinsfiles
+
 
 # TODO Update the following to paths for your system
 CLONED_REPOS_DIR_PATH = 'C:/Users/Viren/Google Drive/1.UIC/540/guillermo_rojas_hernandez_viren_mody_courseproject/ClonedRepos/'
 # CLONED_REPOS_DIR_PATH = '/home/guillermo/cs540/guillermo_rojas_hernandez_viren_mody_courseproject/ClonedRepos/'
+
+# Research Topic Number - Will be appended to the directory path to separate Jenkinsfiles by research topic
+research_topic_num = 0
 
 # Global git_hub object
 git_hub = None
@@ -201,6 +206,8 @@ def search_and_download_jenkinsfiles(query, num_results):
     results = project_utils.search_by_code(git_hub, query, num_results)
     logger.debug("Results from project.search_by_code: %s", results)
 
+    global research_topic_num
+    research_topic_num += 1
     repo_data = []
     # Get file contents of all results (raw url is second item in tuple: results[i][1])
     for i in range(0, len(results)):
@@ -210,7 +217,7 @@ def search_and_download_jenkinsfiles(query, num_results):
         # print the whole folder name
         logger.debug(results[i][2])
         github_repo_name = results[i][2]
-        path_to_repo = CLONED_REPOS_DIR_PATH + github_repo_name
+        path_to_repo = CLONED_REPOS_DIR_PATH + str(research_topic_num) + '/' + github_repo_name
         pathlib.Path(path_to_repo).mkdir(parents=True, exist_ok=True)
 
         # Write file contents back to Jenkinsfile
@@ -242,7 +249,7 @@ def analyze_research_question_triggers_stages():
 
     # Query for GitHub Jenkinsfile search ('pipeline' is used because our focus is on declarative pipeline syntax): TODO Change num_results as per your preference
     query = "filename:jenkinsfile q=pipeline triggers stage tools"
-    num_results = 100
+    num_results = 10
     repo_data = search_and_download_jenkinsfiles(query, num_results)
     logger.info('Results received from search: %s', repo_data)
 
@@ -388,7 +395,7 @@ def main():
     analyze_research_question_triggers_stages()
 
     # Research Question #2
-    # analyze_research_question_tools()
+    analyze_research_question_tools()
 
 
 if __name__ == '__main__':
