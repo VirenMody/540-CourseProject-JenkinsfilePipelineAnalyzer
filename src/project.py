@@ -206,6 +206,7 @@ def search_and_download_jenkinsfiles(query, num_results):
     results = project_utils.search_by_code(git_hub, query, num_results)
     logger.debug("Results from project.search_by_code: %s", results)
 
+    # Increment research_topic_num for each research topic to separate jenkinsfiles that are downloaded
     global research_topic_num
     research_topic_num += 1
     repo_data = []
