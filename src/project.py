@@ -41,7 +41,7 @@ def configure_logger():
 
     # TODO change logger level to your preference
     LOG_FILENAME = 'project.log'
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
     formatter = logging.Formatter('%(levelname)s:%(filename)s: In %(funcName)s(): On Line: %(lineno)d: %(message)s')
 
     # Setup output log to console and to a file
@@ -129,10 +129,10 @@ def parse_triggers_and_stages(jenkinsfile):
 
         # Catch AttributeErrors: Most commonly occurs when the above keywords are found in a context other than designed for (i.e. the word 'stage' is found in the comments)
         except AttributeError as error:
-            logger.error(error)
+            logger.error('%s: SKIPPING THIS JENKINSFILE', error)
             return None, None, None, None
         except Exception as exception:
-            logger.error(exception)
+            logger.error('%s: SKIPPING THIS JENKINSFILE', exception)
             return None, None, None, None
 
     logger.debug('TRIGGERS: %s', triggers_found)
@@ -234,14 +234,14 @@ def analyze_research_question_triggers_stages():
     Research Question #1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?
     """
 
-    logger.info('Analyzing for Research Question 1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?')
+    logger.info('Analyzing Jenkinsfiles for Research Question 1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?')
 
     # Create DataFrame to store all data
     df_headers = ['RepoNum', 'Username', 'RepositoryName', 'TriggerType', 'TriggerValue', 'TriggerOccurrence', 'StageName', 'StageOccurrence']
     df = project_utils.create_df(df_headers)
 
     # Query for GitHub Jenkinsfile search ('pipeline' is used because our focus is on declarative pipeline syntax): TODO Change num_results as per your preference
-    query = "filename:jenkinsfile q=pipeline triggers stage"
+    query = "filename:jenkinsfile q=pipeline triggers stage tools"
     num_results = 100
     repo_data = search_and_download_jenkinsfiles(query, num_results)
     logger.info('Results received from search: %s', repo_data)
@@ -320,7 +320,8 @@ def analyze_research_question_triggers_stages():
 
     # Write DataFrame to CSV file
     df.to_csv(csv_file, mode='a', header='false', sep=',', na_rep='', index=False)
-    logger.info('Results written to csv file for Research Question 1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?')
+    logger.info('Results written in /src folder to \'%s\' for \n\t\t\t\t\tResearch Question 1: How does the number of triggers in a pipeline correlate with the number of stages '
+                'in the pipeline?', csv_file)
 
 
 # TODO Function documentation comments
@@ -329,7 +330,7 @@ def analyze_research_question_tools():
 
     :return:
     """
-    logger.info('Analyzing for Research Question 2: What types of tools are used in the pipeline?')
+    logger.info('Analyzing Jenkinsfiles for Research Question 2: What types of tools are used in the pipeline?')
 
     # Create DataFrame to store all data
     df_headers = ['Username', 'RepositoryName', 'ToolType', 'ToolVersion', 'TriggerOccurrence']
@@ -387,7 +388,7 @@ def main():
     analyze_research_question_triggers_stages()
 
     # Research Question #2
-    analyze_research_question_tools()
+    # analyze_research_question_tools()
 
 
 if __name__ == '__main__':
