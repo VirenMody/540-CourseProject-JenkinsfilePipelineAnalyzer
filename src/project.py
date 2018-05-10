@@ -161,45 +161,52 @@ def parse_tools(jenkinsfile):
     :param jenkinsfile: path to Jenkinsfile to parse
     :return: list of triggers, list of stages and number of triggers and stages
     """
-    tools = ['maven', 'jdk']
+    logger.debug('Parsing Jenkinsfile: %s', jenkinsfile)
+    tools = ['maven', 'jdk', 'nodejs']
     tools_found = []
     tool_type = ''
     num_tools = 0
+    capture_tools = False
 
-    # stages_found = []
-    # stage_name = ''
-    # num_stages = 0
+    with open(jenkinsfile, errors='replace') as file:
+        logger.debug('Jenkinsfile Contents: %s', file)
 
-    with open(jenkinsfile) as file:
-        for line in file:
-            line = line.strip('\n')
-            if any(trig in line for trig in tools):
-                num_tools += 1
+        try:
+            for line in file:
+                line = line.strip('\n')
 
-                if 'maven' in line:
-                    tool_type = 'maven'
-                elif 'jdk' in line:
-                    tool_type = 'jdk'
+                if "tools" in line:
+                    capture_tools = True
+                    continue
+                elif "}" in line and capture_tools is True:
+                    capture_tools = False
+                    break
+                elif capture_tools is True:
+                    num_tools += 1
 
-                # Retrieve trigger value from between parentheses and single quotes
-                re_tools_pattern = r"(?:\'|\")(.*)(?:\'|\")"
-                tool_value = re.search(re_tools_pattern, line).group(1)
-                logger.debug('LINE: %s', line)
-                logger.debug('ADDING TOOL:  %s = %s', tool_type, tool_value)
-                tools_found.append({'ToolType': tool_type, 'ToolVersion': tool_value, 'Occurrence': num_tools})
+                    # strip white space from beginning of line
+                    str = line.lstrip()
+                    # save the first part of the string before the space as a tool type
+                    tool_type = str.partition(' ')[0]
 
-            '''
-            if 'stage' in line and 'stages' not in line:
-                num_stages += 1
-                re_stages_pattern = r"stage\s*\(*\s*\'*\"*([A-Za-z]*)\'*\"*\s*\)*"
-                stage_name = re.search(re_stages_pattern, line).group(1)
-                logger.debug('LINE: %s', line)
-                logger.debug('ADDING STAGE:  %s, Occurrence: %s', stage_name, num_stages)
-                stages_found.append({'Name': stage_name, 'Occurrence': num_stages})
-            '''
+                    # Retrieve trigger value from between parentheses and single quotes
+                    re_tools_pattern = r"(?:\'|\")(.*)(?:\'|\")"
+                    tool_value = re.search(re_tools_pattern, line).group(1)
+                    logger.debug('LINE: %s', line)
+                    logger.debug('ADDING TOOL:  %s = %s', tool_type, tool_value)
+                    tools_found.append({'ToolType': tool_type, 'ToolVersion': tool_value, 'Occurrence': num_tools})
+
+
+        # Catch AttributeErrors: Most commonly occurs when the above keywords are found in a context other than designed for (i.e. the word 'stage' is found in the comments)
+        except AttributeError as error:
+            logger.error('%s: Unique Pipeline Syntax--SKIPPING THIS JENKINSFILE', error)
+            return None, None
+        except Exception as exception:
+            logger.error('%s: SKIPPING THIS JENKINSFILE', exception)
+            return None, None
 
     logger.debug('TOOLS FOUND: %s', tools_found)
-    # logger.debug('STAGES: %s', stages_found)
+
     return tools_found, num_tools
 
 
@@ -223,10 +230,14 @@ def search_and_download_jenkinsfiles(query, num_results):
     # Get file contents of all results (raw url is second item in tuple: results[i][1])
     for i in range(0, len(results)):
         res = requests.get(results[i][1])
-        # print text of result
-        # logger.debug(res.text)
+
         # print the whole folder name
+        logger.debug("Repository %s", i+1)
         logger.debug(results[i][2])
+
+        # Print contents of Jenkinsfile
+        logger.debug(res.text)
+
         github_repo_name = results[i][2]
         path_to_repo = CLONED_REPOS_DIR_PATH + str(research_topic_num) + '/' + github_repo_name
         pathlib.Path(path_to_repo).mkdir(parents=True, exist_ok=True)
@@ -353,45 +364,59 @@ def analyze_research_question_tools():
     """
     logger.info('Analyzing Jenkinsfiles for Research Question 2: What types of tools are used in the pipeline?')
 
-    # Create DataFrame to store all data
-    df_headers = ['Username', 'RepositoryName', 'ToolType', 'ToolVersion', 'TriggerOccurrence']
+    # Format Dataframe with variables that function will be filling in
+    df_headers = ['RepoNum', 'Username', 'RepositoryName', 'ToolType', 'ToolVersion', 'TriggerOccurrence']
     df = project_utils.create_df(df_headers)
 
-    # Create Query and Search GitHub
+    # Create Query and Search GitHub (pipeline is used because our focus is on declarative pipeline syntax)
+    # 'tools' is included in query to search for files that have the key word tools
     query = "filename:jenkinsfile q=pipeline tools"
-    num_results = 10
+    num_results = 50
     repo_data = search_and_download_jenkinsfiles(query, num_results)
+    logger.info('Results received from search: %s', repo_data)
+    logger.info('Number of Results received from search: %s', len(repo_data))
 
+    repo_num = 0
     for repo in repo_data:
+        repo_num += 1
+
+        logger.debug('Repo Number: %s', repo_num)
         username = repo['Username']
         repo_name = repo['RepoName']
-
         jenkinsfile_path = repo['Jenkinsfile_Path']
 
         # Skip Jenkinsfiles that do not exist
         if os.path.isfile(jenkinsfile_path) is False:
             logger.error('%s DOES NOT EXIST - SKIPPING REPO', jenkinsfile_path)
+            repo_num -= 1
             continue
 
         # Parse triggers and stages from file
-        triggers_data, num_triggers = parse_tools(jenkinsfile_path)
-        triggers_datum = list(triggers_data)
-        # Store parsed data in DataFrame for analyzing
-        # combined_data = list(itertools.zip_longest(triggers_data, stages_data))
-        iteration = 0
-        for tool in triggers_data:
-            # tool = data
-            trigger_type = ''
-            trigger_value = ''
-            trigger_occurrence = ''
-            if tool is not None:
-                trigger_type = tool['ToolType']
-                trigger_value = tool['ToolVersion']
-                trigger_occurrence = tool['Occurrence']
+        tool_data, num_tools = parse_tools(jenkinsfile_path)
 
-            new_row = [[username, repo_name, trigger_type, trigger_value, trigger_occurrence]]
-            logger.debug("username: %s repo name: %s tool type: %s tool value: %s tool occurrence: %s",
-                         username, repo_name, trigger_type, trigger_value, trigger_occurrence)
+        # Skip repositories that don't use typical declarative pipeline syntax or cause parsing errors
+        if tool_data is None:
+            logger.error('%s CAUSING PARSING ERRORS OR DOES NOT HAVE DECLARATIVE PIPELINE SYNTAX', jenkinsfile_path)
+            repo_num -= 1
+            continue
+
+        # Store parsed data in DataFrame for analyzing
+        iteration = 0
+        for tool in tool_data:
+            # tool = data
+            tool_type = ''
+            tool_value = ''
+            tool_occurrence = ''
+            if tool is not None:
+                tool_type = tool['ToolType']
+                tool_value = tool['ToolVersion']
+                tool_occurrence = tool['Occurrence']
+
+            repo_num_str = str(repo_num) if iteration == 0 else ''
+
+            new_row = [[repo_num_str, username, repo_name, tool_type, tool_value, tool_occurrence]]
+            logger.debug("Username: %s Repo Name: %s Tool Type: %s Tool Value: %s Tool Occurrence: %s",
+                         username, repo_name, tool_type, tool_value, tool_occurrence)
             df = project_utils.add_row_to_df(df, df_headers, new_row)
 
             if iteration == 0:
@@ -400,7 +425,23 @@ def analyze_research_question_tools():
 
             iteration += 1
 
-    print(df)
+        # Insert blank row for increased readability
+        df = project_utils.add_blank_row_to_df(df, df_headers)
+
+    csv_file = 'research_question_tools.csv'
+    csv_header = [['Research Question 1: What types of tools are used in the pipeline?'],
+                  ['\n'],
+                  ['Parsed Jenkinsfile Data']]
+
+    # Write to CSV file
+    with open(csv_file, 'w+') as analysisFile:
+        cw = csv.writer(analysisFile, dialect='excel', lineterminator='\n')
+        cw.writerows(csv_header)
+
+    # Write DataFrame to CSV file
+    df.to_csv(csv_file, mode='a', header='false', sep=',', na_rep='', index=False)
+    logger.info('Results written in /src folder to \'%s\' for \n\t\t\t\t\tResearch Question 1: How does the number of triggers in a pipeline correlate with the number of stages '
+                'in the pipeline?', csv_file)
 
 
 def parse_archiveArtifacts(jenkinsfile):
