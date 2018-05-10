@@ -1,3 +1,5 @@
+from time import sleep
+
 from github3 import GitHub
 import requests
 import pathlib
@@ -11,6 +13,7 @@ import csv
 import project_utils
 
 # TODO Checked for balanced brackets
+# TODO Artifacts Research Questions - Maybe correlation between artifact file extensions and fingerprints?
 # TODO Artifacts Research Questions - Maybe correlation between tools and artifact file extensions?
 # TODO What is the correlation between the presence of disableconcurrentbuilds() and hashes in triggers?
 # TODO Research question involving Slack
@@ -50,7 +53,7 @@ def configure_logger():
 
     # TODO change logger level to your preference
     LOG_FILENAME = 'project.log'
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(levelname)s:%(filename)s: In %(funcName)s(): On Line: %(lineno)d: %(message)s')
 
     # Setup output log to console and to a file
@@ -90,11 +93,11 @@ def parse_triggers_and_stages(jenkinsfile):
 
     logger.debug('Parsing Jenkinsfile: %s', jenkinsfile)
     triggers = ['cron', 'pollSCM', 'upstream']
-    triggers_found = []
+    triggers_data = []
     trigger_type = ''
     num_triggers = 0
 
-    stages_found = []
+    stages_data = []
     num_stages = 0
 
     # Parse the Jenkinsfile line by line searching for keywords relevant to triggers and stages
@@ -123,7 +126,9 @@ def parse_triggers_and_stages(jenkinsfile):
                     logger.debug('LINE: %s', line)
                     trigger_value = re.search(re_triggers_pattern, line).group(1)
                     logger.debug('ADDING TRIGGER:  %s = %s', trigger_type, trigger_value)
-                    triggers_found.append({'Type': trigger_type, 'Value': trigger_value, 'Occurrence': num_triggers})
+                    triggers_data.append({'Type': trigger_type,
+                                           'Value': trigger_value,
+                                           'Occurrence': num_triggers})
 
                 # Parse and store data containing stage
                 elif 'stage' in line and 'stages' not in line:
@@ -134,7 +139,8 @@ def parse_triggers_and_stages(jenkinsfile):
                     logger.debug('LINE: %s', line)
                     stage_name = re.search(re_stages_pattern, line).group(1)
                     logger.debug('ADDING STAGE:  %s, Occurrence: %s', stage_name, num_stages)
-                    stages_found.append({'Name': stage_name, 'Occurrence': num_stages})
+                    stages_data.append({'Name': stage_name,
+                                         'Occurrence': num_stages})
 
     # Catch AttributeErrors: Most commonly occurs when the above keywords are found in a context other than designed for (i.e. the word 'stage' is found in the comments)
     except AttributeError as error:
@@ -144,9 +150,9 @@ def parse_triggers_and_stages(jenkinsfile):
         logger.error('%s: SKIPPING THIS JENKINSFILE', exception)
         return None, None, None, None
 
-    logger.debug('TRIGGERS: %s', triggers_found)
-    logger.debug('STAGES: %s', stages_found)
-    return triggers_found, stages_found, num_triggers, num_stages
+    logger.debug('TRIGGERS: %s', triggers_data)
+    logger.debug('STAGES: %s', stages_data)
+    return triggers_data, stages_data, num_triggers, num_stages
 
 
 def parse_tools(jenkinsfile):
@@ -407,81 +413,105 @@ def parse_archiveArtifacts(jenkinsfile):
 
     logger.debug('Parsing Jenkinsfile: %s', jenkinsfile)
 
+    # List used as a stack to keep track of which section 'archiveArtifacts' is in
+    section_stack = []
+    artifacts_data = []
+    num_artifacts = 0
+
     # Parse the Jenkinsfile line by line searching for 'archiveArtifacts' keyword and relevant keywords (i.e fingerprint)
     try:
         with open(jenkinsfile, errors='replace') as file:
             file_lines = file.readlines()
+            for idx, line in enumerate(file_lines):
+                line = line.strip()
 
-            # List used as a stack to keep track of which section 'archiveArtifacts' is in
-            section_stack = []
+                if line.startswith('//'):
+                    continue
 
-            for line in file_lines:
-                line = line.strip('\n')
-                # print(line)
-
-                # If there's an opening bracket, push section name onto the stack, if there's a closing bracket, pop it off
+                # If there's an opening bracket, push section name onto the stack
                 if '{' in line:
-                    print('Pushing: ', line.strip('{ '))
                     section_stack.append(line.strip(' {'))
-                if '}' in line:
-                    print('Popping: ', section_stack.pop())
 
+                # If there's a closing bracket, pop it off
+                if '}' in line:
+                    section_stack.pop()
+
+                # Extract all artifact data the line containing 'archiveArtifact' (i.e. artifact, extension, section, etc.)
                 if 'archiveArtifact' in line:
+                    num_artifacts += 1
                     artifact = ''
                     extension = ''
-                    fingerprint = False
-                    onlyIfSuccessful = False
-                    in_section = ''
-                    section_name = ''
-                    print('ARTIFACT: ', line.strip())
+                    fingerprint = 'false'
+                    onlyIfSuccessful = 'N/A'
+                    section = ''
+                    section_name = 'N/A'
 
-            if not section_stack:
-                print('STACK IS EMPTY!!')
+                    # Retrieve 'archivedArtifact' from between single or double quotes, then extract only name & extension without the path
+                    re_artifact_pattern = r"(?:'|\")(.*)(?:'|\")"
+                    logger.debug('LINE: %s', line)
+                    archived_artifact = re.search(re_artifact_pattern, line).group(1)
+                    artifact = pathlib.Path(archived_artifact).name
+                    logger.debug('EXTRACTED ARTIFACT: %s', artifact)
 
-            # # Skip files that use the 'pipelineTriggers' format
-            # if 'pipelineTriggers' in line:
-            #     return None, None, None, None
-            #
-            # # Parse and store data containing any of the 3 triggers: cron, pollSCM, upstream
-            # if any(trig in line for trig in triggers):
-            #     num_triggers += 1
-            #
-            #     if 'cron' in line:
-            #         trigger_type = 'cron'
-            #     elif 'pollSCM' in line:
-            #         trigger_type = 'pollSCM'
-            #     elif 'upstream' in line:
-            #         trigger_type = 'upstream'
-            #
-            #     # Retrieve trigger value/argument from between parentheses and/or single or double quotes
-            #     re_triggers_pattern = r"(?:'|\")(.*)(?:'|\")"
-            #     logger.debug('LINE: %s', line)
-            #     trigger_value = re.search(re_triggers_pattern, line).group(1)
-            #     logger.debug('ADDING TRIGGER:  %s = %s', trigger_type, trigger_value)
-            #     triggers_found.append({'Type': trigger_type, 'Value': trigger_value, 'Occurrence': num_triggers})
-            #
-            # # Parse and store data containing stage
-            # elif 'stage' in line and 'stages' not in line:
-            #     num_stages += 1
-            #
-            #     # Retrieve stage name from between parentheses and/or single or double quotes
-            #     re_stages_pattern = r"(?:'|\")(.*)(?:'|\")"
-            #     logger.debug('LINE: %s', line)
-            #     stage_name = re.search(re_stages_pattern, line).group(1)
-            #     logger.debug('ADDING STAGE:  %s, Occurrence: %s', stage_name, num_stages)
-            #     stages_found.append({'Name': stage_name, 'Occurrence': num_stages})
+                    # Extract artifact file extension and join them if there are multiple
+                    extension = ''.join(pathlib.Path(artifact).suffixes)
+                    # If there is no extension, it either indicates all files in a directory or the file has no extension at all
+                    if extension == '':
+                        if artifact.endswith('*'):
+                            extension = 'All'
+                        else:
+                            extension = 'None'
+                    logger.debug('EXTRACTED EXTENSION: %s', extension)
+
+                    # Extract fingerprint boolean (true, false) from line
+                    re_fingerprint_pattern = r"fingerprint:\s(.*)"
+                    if 'fingerprint' in line:
+                        fingerprint = re.search(re_fingerprint_pattern, line).group(1)
+                    # If the fingerprint is not on the current line, check the following and previous lines to accommodate different formats
+                    else:
+                        # Update regex pattern to accommodate different formats
+                        re_fingerprint_pattern = r"(?:'|\")(.*)(?:'|\")"
+                        if idx + 1 < len(file_lines):
+                            next_line = file_lines[idx+1]
+                            if 'fingerprint' in next_line and 'archivedArtifact' not in next_line:
+                                fingerprint = re.search(re_fingerprint_pattern, file_lines[idx+1]).group(1)
+
+                        # TODO Remove fingerprint check in previous line?
+                        # if fingerprint == '' and idx - 1 >= 0:
+                        #     prev_line = file_lines[idx-1]
+                        #     if 'fingerprint' in prev_line and 'archivedArtifact' not in prev_line:
+                        #         fingerprint = re.search(re_fingerprint_pattern, file_lines[idx-1]).group(1)
+
+                        # If the fingerprint is not a boolean and is an artifact, set the boolean to true
+                        if fingerprint != 'true' and fingerprint != 'false':
+                            logger.debug('EXTRACTED NON-BOOLEAN FINGERPRINT ARTIFACT: %s', fingerprint)
+                            fingerprint = 'true'
+                    logger.debug('EXTRACTED FINGERPRINT: %s', fingerprint)
+
+                    artifacts_data.append({'Artifact': artifact,
+                                            'Extension': extension,
+                                            'fingerprint': fingerprint,
+                                            'onlyIfSuccessful': onlyIfSuccessful,
+                                            'FoundInSection': section,
+                                            'SectionName': section_name,
+                                            'Occurrence': num_artifacts})
+
+            # TODO Skip Jenkinsfile if brackets aren't balanced?
+            if section_stack:
+                print('WARNING STACK IS NOT EMPTY!!')
+                sleep(5)
 
     # Catch AttributeErrors: Most commonly occurs when the above keywords are found in a context other than designed for (i.e. the word 'stage' is found in the comments)
     except AttributeError as error:
         logger.error('%s: SKIPPING THIS JENKINSFILE', error)
-        return None, None, None, None
+        return None, None
     except Exception as exception:
         logger.error('%s: SKIPPING THIS JENKINSFILE', exception)
-        return None, None, None, None
+        return None, None
 
-    # logger.debug('TRIGGERS: %s', triggers_found)
-    # logger.debug('STAGES: %s', stages_found)
-    # return triggers_found, stages_found, num_triggers, num_stages
+    logger.debug('ARTIFACTS: %s', artifacts_data)
+    logger.debug('NUMBER OF ARTIFACTS: %s', num_artifacts)
+    return artifacts_data, num_artifacts
 
 
 def analyze_research_questions_artifacts():
@@ -497,12 +527,12 @@ def analyze_research_questions_artifacts():
                 'What percentage of archived artifacts are archived with a fingerprint?')
 
     # Create DataFrame to store all data
-    df_headers = ['RepoNum', 'Username', 'RepositoryName', 'Artifact', 'Extension', 'fingerprint', 'onlyIfSuccessful', 'InSection', 'SectionName']
+    df_headers = ['RepoNum', 'Username', 'RepositoryName', 'Artifact', 'Extension', 'fingerprint', 'onlyIfSuccessful', 'FoundInSection', 'SectionName', 'Occurrence']
     df = project_utils.create_df(df_headers)
 
     # Query for GitHub Jenkinsfile search ('pipeline' is used because our focus is on declarative pipeline syntax): TODO Change num_results as per your preference
     query = "filename:jenkinsfile q=pipeline archiveartifacts tools"
-    num_results = 1
+    num_results = 100
     repo_data = search_and_download_jenkinsfiles(query, num_results)
     logger.info('Results received from search: %s', repo_data)
 
@@ -521,13 +551,13 @@ def analyze_research_questions_artifacts():
             continue
 
         # Parse 'archiveArtifacts' data from Jenkinsfile
-        parse_archiveArtifacts(jenkinsfile_path)
-        #
-        # # Skip repositories that don't use typical declarative pipeline syntax or cause parsing errors
-        # if triggers_data is None:
-        #     repo_num -= 1
-        #     continue
-        #
+        artifacts_data, num_artifacts = parse_archiveArtifacts(jenkinsfile_path)
+
+        # Skip repositories that don't use typical declarative pipeline syntax or cause parsing errors
+        if artifacts_data is None:
+            repo_num -= 1
+            continue
+
         # # Store parsed data in DataFrame for analyzing
         # combined_data = list(itertools.zip_longest(triggers_data, stages_data))
         # for iteration, data in enumerate(combined_data):
