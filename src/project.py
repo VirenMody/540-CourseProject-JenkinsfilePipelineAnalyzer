@@ -10,6 +10,7 @@ import csv
 
 import project_utils
 
+# TODO Checked for balanced brackets
 # TODO Artifacts Research Questions - Maybe correlation between tools and artifact file extensions?
 # TODO What is the correlation between the presence of disableconcurrentbuilds() and hashes in triggers?
 # TODO Research question involving Slack
@@ -409,41 +410,66 @@ def parse_archiveArtifacts(jenkinsfile):
     # Parse the Jenkinsfile line by line searching for 'archiveArtifacts' keyword and relevant keywords (i.e fingerprint)
     try:
         with open(jenkinsfile, errors='replace') as file:
-            for line in file:
+            file_lines = file.readlines()
+
+            # List used as a stack to keep track of which section 'archiveArtifacts' is in
+            section_stack = []
+
+            for line in file_lines:
                 line = line.strip('\n')
+                # print(line)
 
-                # Skip files that use the 'pipelineTriggers' format
-                if 'pipelineTriggers' in line:
-                    return None, None, None, None
+                # If there's an opening bracket, push section name onto the stack, if there's a closing bracket, pop it off
+                if '{' in line:
+                    print('Pushing: ', line.strip('{ '))
+                    section_stack.append(line.strip(' {'))
+                if '}' in line:
+                    print('Popping: ', section_stack.pop())
 
-                # Parse and store data containing any of the 3 triggers: cron, pollSCM, upstream
-                if any(trig in line for trig in triggers):
-                    num_triggers += 1
+                if 'archiveArtifact' in line:
+                    artifact = ''
+                    extension = ''
+                    fingerprint = False
+                    onlyIfSuccessful = False
+                    in_section = ''
+                    section_name = ''
+                    print('ARTIFACT: ', line.strip())
 
-                    if 'cron' in line:
-                        trigger_type = 'cron'
-                    elif 'pollSCM' in line:
-                        trigger_type = 'pollSCM'
-                    elif 'upstream' in line:
-                        trigger_type = 'upstream'
+            if not section_stack:
+                print('STACK IS EMPTY!!')
 
-                    # Retrieve trigger value/argument from between parentheses and/or single or double quotes
-                    re_triggers_pattern = r"(?:'|\")(.*)(?:'|\")"
-                    logger.debug('LINE: %s', line)
-                    trigger_value = re.search(re_triggers_pattern, line).group(1)
-                    logger.debug('ADDING TRIGGER:  %s = %s', trigger_type, trigger_value)
-                    triggers_found.append({'Type': trigger_type, 'Value': trigger_value, 'Occurrence': num_triggers})
-
-                # Parse and store data containing stage
-                elif 'stage' in line and 'stages' not in line:
-                    num_stages += 1
-
-                    # Retrieve stage name from between parentheses and/or single or double quotes
-                    re_stages_pattern = r"(?:'|\")(.*)(?:'|\")"
-                    logger.debug('LINE: %s', line)
-                    stage_name = re.search(re_stages_pattern, line).group(1)
-                    logger.debug('ADDING STAGE:  %s, Occurrence: %s', stage_name, num_stages)
-                    stages_found.append({'Name': stage_name, 'Occurrence': num_stages})
+            # # Skip files that use the 'pipelineTriggers' format
+            # if 'pipelineTriggers' in line:
+            #     return None, None, None, None
+            #
+            # # Parse and store data containing any of the 3 triggers: cron, pollSCM, upstream
+            # if any(trig in line for trig in triggers):
+            #     num_triggers += 1
+            #
+            #     if 'cron' in line:
+            #         trigger_type = 'cron'
+            #     elif 'pollSCM' in line:
+            #         trigger_type = 'pollSCM'
+            #     elif 'upstream' in line:
+            #         trigger_type = 'upstream'
+            #
+            #     # Retrieve trigger value/argument from between parentheses and/or single or double quotes
+            #     re_triggers_pattern = r"(?:'|\")(.*)(?:'|\")"
+            #     logger.debug('LINE: %s', line)
+            #     trigger_value = re.search(re_triggers_pattern, line).group(1)
+            #     logger.debug('ADDING TRIGGER:  %s = %s', trigger_type, trigger_value)
+            #     triggers_found.append({'Type': trigger_type, 'Value': trigger_value, 'Occurrence': num_triggers})
+            #
+            # # Parse and store data containing stage
+            # elif 'stage' in line and 'stages' not in line:
+            #     num_stages += 1
+            #
+            #     # Retrieve stage name from between parentheses and/or single or double quotes
+            #     re_stages_pattern = r"(?:'|\")(.*)(?:'|\")"
+            #     logger.debug('LINE: %s', line)
+            #     stage_name = re.search(re_stages_pattern, line).group(1)
+            #     logger.debug('ADDING STAGE:  %s, Occurrence: %s', stage_name, num_stages)
+            #     stages_found.append({'Name': stage_name, 'Occurrence': num_stages})
 
     # Catch AttributeErrors: Most commonly occurs when the above keywords are found in a context other than designed for (i.e. the word 'stage' is found in the comments)
     except AttributeError as error:
@@ -453,9 +479,9 @@ def parse_archiveArtifacts(jenkinsfile):
         logger.error('%s: SKIPPING THIS JENKINSFILE', exception)
         return None, None, None, None
 
-    logger.debug('TRIGGERS: %s', triggers_found)
-    logger.debug('STAGES: %s', stages_found)
-    return triggers_found, stages_found, num_triggers, num_stages
+    # logger.debug('TRIGGERS: %s', triggers_found)
+    # logger.debug('STAGES: %s', stages_found)
+    # return triggers_found, stages_found, num_triggers, num_stages
 
 
 def analyze_research_questions_artifacts():
@@ -476,7 +502,7 @@ def analyze_research_questions_artifacts():
 
     # Query for GitHub Jenkinsfile search ('pipeline' is used because our focus is on declarative pipeline syntax): TODO Change num_results as per your preference
     query = "filename:jenkinsfile q=pipeline archiveartifacts tools"
-    num_results = 10
+    num_results = 1
     repo_data = search_and_download_jenkinsfiles(query, num_results)
     logger.info('Results received from search: %s', repo_data)
 
@@ -496,42 +522,42 @@ def analyze_research_questions_artifacts():
 
         # Parse 'archiveArtifacts' data from Jenkinsfile
         parse_archiveArtifacts(jenkinsfile_path)
-
-        # Skip repositories that don't use typical declarative pipeline syntax or cause parsing errors
-        if triggers_data is None:
-            repo_num -= 1
-            continue
-
-        # Store parsed data in DataFrame for analyzing
-        combined_data = list(itertools.zip_longest(triggers_data, stages_data))
-        for iteration, data in enumerate(combined_data):
-            trigger, stage = data
-            trigger_type = ''
-            trigger_value = ''
-            trigger_occurrence = ''
-            stage_name = ''
-            stage_occurrence = 0
-            if trigger is not None:
-                trigger_type = trigger['Type']
-                trigger_value = trigger['Value']
-                trigger_occurrence = trigger['Occurrence']
-            if stage is not None:
-                stage_name = stage['Name']
-                stage_occurrence = stage['Occurrence']
-
-            repo_num_str = str(repo_num) if iteration == 0 else ''
-
-            # Add parsed data to DataFrame
-            new_row = [[repo_num_str, username, repo_name, trigger_type, trigger_value, trigger_occurrence, stage_name, stage_occurrence]]
-            df = project_utils.add_row_to_df(df, df_headers, new_row)
-
-            # Do not repeat username and repo_name for output readability
-            if iteration == 0:
-                username = ''
-                repo_name = ''
-
-        # Insert blank row for increased readability
-        df = project_utils.add_blank_row_to_df(df, df_headers)
+        #
+        # # Skip repositories that don't use typical declarative pipeline syntax or cause parsing errors
+        # if triggers_data is None:
+        #     repo_num -= 1
+        #     continue
+        #
+        # # Store parsed data in DataFrame for analyzing
+        # combined_data = list(itertools.zip_longest(triggers_data, stages_data))
+        # for iteration, data in enumerate(combined_data):
+        #     trigger, stage = data
+        #     trigger_type = ''
+        #     trigger_value = ''
+        #     trigger_occurrence = ''
+        #     stage_name = ''
+        #     stage_occurrence = 0
+        #     if trigger is not None:
+        #         trigger_type = trigger['Type']
+        #         trigger_value = trigger['Value']
+        #         trigger_occurrence = trigger['Occurrence']
+        #     if stage is not None:
+        #         stage_name = stage['Name']
+        #         stage_occurrence = stage['Occurrence']
+        #
+        #     repo_num_str = str(repo_num) if iteration == 0 else ''
+        #
+        #     # Add parsed data to DataFrame
+        #     new_row = [[repo_num_str, username, repo_name, trigger_type, trigger_value, trigger_occurrence, stage_name, stage_occurrence]]
+        #     df = project_utils.add_row_to_df(df, df_headers, new_row)
+        #
+        #     # Do not repeat username and repo_name for output readability
+        #     if iteration == 0:
+        #         username = ''
+        #         repo_name = ''
+        #
+        # # Insert blank row for increased readability
+        # df = project_utils.add_blank_row_to_df(df, df_headers)
 
 
 def main():
@@ -542,11 +568,11 @@ def main():
     # analyze_research_question_triggers_stages()
 
     # Research Question #2
-    analyze_research_question_tools()
+    # analyze_research_question_tools()
 
     # TODO Update this comment
     # Research Questions #3, 4, 5
-    # analyze_research_questions_artifacts()
+    analyze_research_questions_artifacts()
 
 
 if __name__ == '__main__':
