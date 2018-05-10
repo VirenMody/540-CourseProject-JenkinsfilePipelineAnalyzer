@@ -1,3 +1,5 @@
+import sys
+import traceback
 from time import sleep
 
 from github3 import GitHub
@@ -464,7 +466,8 @@ def parse_archiveArtifacts(jenkinsfile):
                     logger.debug('EXTRACTED EXTENSION: %s', extension)
 
                     # Extract fingerprint boolean (true, false) from line
-                    re_fingerprint_pattern = r"fingerprint:\s(.*)"
+                    # re_fingerprint_pattern = r"fingerprint:\s(.*)"
+                    re_fingerprint_pattern = r"fingerprint:\s([A-Za-z]*)"
                     if 'fingerprint' in line:
                         fingerprint = re.search(re_fingerprint_pattern, line).group(1)
                     # If the fingerprint is not on the current line, check the following and previous lines to accommodate different formats
@@ -483,10 +486,18 @@ def parse_archiveArtifacts(jenkinsfile):
                         #         fingerprint = re.search(re_fingerprint_pattern, file_lines[idx-1]).group(1)
 
                         # If the fingerprint is not a boolean and is an artifact, set the boolean to true
+                        if jenkinsfile == "C:/Users/Viren/Google Drive/1.UIC/540/guillermo_rojas_hernandez_viren_mody_courseproject/ClonedRepos/1/bg1kk/stable_173/Jenkinsfile":
+                            sleep(1)
                         if fingerprint != 'true' and fingerprint != 'false':
                             logger.debug('EXTRACTED NON-BOOLEAN FINGERPRINT ARTIFACT: %s', fingerprint)
                             fingerprint = 'true'
                     logger.debug('EXTRACTED FINGERPRINT: %s', fingerprint)
+
+                    # Extract onlyIfSuccessful boolean from line
+                    re_onlyIfSuccessful_pattern = r"onlyIfSuccessful:\s(true|false)"
+                    if 'onlyIfSuccessful' in line:
+                        onlyIfSuccessful = re.search(re_onlyIfSuccessful_pattern, line).group(1)
+                    logger.debug('EXTRACTED onlyIfSuccessful: %s', onlyIfSuccessful)
 
                     artifacts_data.append({'Artifact': artifact,
                                             'Extension': extension,
@@ -498,15 +509,22 @@ def parse_archiveArtifacts(jenkinsfile):
 
             # TODO Skip Jenkinsfile if brackets aren't balanced?
             if section_stack:
-                print('WARNING STACK IS NOT EMPTY!!')
-                sleep(5)
+                logger.warning('WARNING: STACK IS NOT EMPTY - Jenkinsfile brackets are imbalanced - SKIPPING THIS JENKINSFILE!')
 
-    # Catch AttributeErrors: Most commonly occurs when the above keywords are found in a context other than designed for (i.e. the word 'stage' is found in the comments)
+    # Catch:
+    # - IndexErrors: Most commonly occurs when there's an imbalance in opening and closing brackets in section_stack
+    # - AttributeErrors: Most commonly occurs when the above keywords are found in a context other than designed for (i.e. the word 'stage' is found in the comments)
+    except IndexError as error:
+        logger.error('ERROR: %s - Jenkinsfile brackets are imbalanced - SKIPPING THIS JENKINSFILE', error)
+        traceback.print_stack()
+        return None, None
     except AttributeError as error:
-        logger.error('%s: SKIPPING THIS JENKINSFILE', error)
+        logger.error('ERROR: %s - SKIPPING THIS JENKINSFILE', error)
+        traceback.print_stack()
         return None, None
     except Exception as exception:
-        logger.error('%s: SKIPPING THIS JENKINSFILE', exception)
+        logger.error('EXCEPTION: %s - SKIPPING THIS JENKINSFILE', exception)
+        traceback.print_stack()
         return None, None
 
     logger.debug('ARTIFACTS: %s', artifacts_data)
@@ -532,7 +550,7 @@ def analyze_research_questions_artifacts():
 
     # Query for GitHub Jenkinsfile search ('pipeline' is used because our focus is on declarative pipeline syntax): TODO Change num_results as per your preference
     query = "filename:jenkinsfile q=pipeline archiveartifacts tools"
-    num_results = 100
+    num_results = 50
     repo_data = search_and_download_jenkinsfiles(query, num_results)
     logger.info('Results received from search: %s', repo_data)
 
