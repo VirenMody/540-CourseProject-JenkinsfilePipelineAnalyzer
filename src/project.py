@@ -13,7 +13,6 @@ import project_utils
 
 # TODO Checked for balanced brackets
 # TODO In search_and_download_jenkinsfiles, skip repos containing 'node' and other issues (after this line res = requests.get(results[i][1]))
-# TODO Artifacts Research Questions - Maybe correlation between artifact file extensions and fingerprints?
 # TODO Artifacts Research Questions - Maybe correlation between tools and artifact file extensions?
 # TODO What is the correlation between the presence of disableconcurrentbuilds() and hashes in triggers?
 # TODO Research question involving Slack
@@ -232,8 +231,8 @@ def search_and_download_jenkinsfiles(query, num_results):
         res = requests.get(results[i][1])
 
         # print the whole folder name
-        logger.debug("Repository %s", i+1)
-        logger.debug('Downloading repo: %s', results[i][2])
+        # logger.debug("Repository %s", i+1)
+        # logger.debug('Downloading repo: %s', results[i][2])
 
         # Print contents of Jenkinsfile
         # logger.debug(res.text)
@@ -614,8 +613,9 @@ def analyze_research_questions_artifacts():
     """
     Function retrieves Jenkinsfiles, parses it, and analyzes the data to answer:
     Research Question #3: In which pipeline sections or pipeline directives are artifacts most frequently and least frequently archived?
-    Research Question #4: Which file extensions are most frequently and least frequent archived?(.exe, .jar, everything, etc.)
+    Research Question #4: Which file extensions are most frequently and least frequently archived?(.exe, .jar, everything, etc.)
     Research Question #5: What percentage of archived artifacts are archived with a fingerprint?
+    Research Question #6: Which archived artifact file extensions are most frequently and least frequently fingerprinted?
     """
 
     logger.info('Analyzing Jenkinsfiles for Research Questions:\n#3: In which pipeline sections or pipeline directives are artifacts most frequently and least frequently '
@@ -628,7 +628,7 @@ def analyze_research_questions_artifacts():
 
     # Query for GitHub Jenkinsfile search ('pipeline' is used because our focus is on declarative pipeline syntax): TODO Change num_results as per your preference
     query = "filename:jenkinsfile q=pipeline archiveartifacts"
-    num_results = 50
+    num_results = 200
     repo_data = search_and_download_jenkinsfiles(query, num_results)
     logger.info('Results received from search: %s', repo_data)
 
@@ -675,14 +675,30 @@ def analyze_research_questions_artifacts():
             new_row = [[repo_num_str, username, repo_name, artifact, extension, fingerprint, onlyIfSuccessful, parent_section, section_name, occurrence]]
             df = project_utils.add_row_to_df(df, df_headers, new_row)
 
-            # # Do not repeat username and repo_name for output readability
-            # if iteration == 0:
-            #     username = ''
-            #     repo_name = ''
+    logger.debug('Total Number of Artifacts: %s', total_num_artifacts)
+    csv_file = 'research_question_artifacts.csv'
+    csv_header = [['Research Question #3: In which pipeline sections or pipeline directives are artifacts most frequently and least frequently archived?'],
+                  ['Answer: '],
+                  ['\n'],
+                  ['Research Question #4: Which file extensions are most frequently and least frequently archived?(.exe, .jar, everything, etc.)'],
+                  ['Answer: '],
+                  ['\n'],
+                  ['Research Question #5: What percentage of archived artifacts are archived with a fingerprint?'],
+                  ['Answer: '],
+                  ['\n'],
+                  ['Research Question #6: Which archived artifact file extensions are most frequently and least frequently fingerprinted?'],
+                  ['Answer: '],
+                  ['\n'],
+                  ['Parsed Jenkinsfile Data']]
 
-        # Insert blank row for increased readability
-        # df = project_utils.add_blank_row_to_df(df, df_headers)
-    logger.info(df)
+    # Write to CSV file
+    with open(csv_file, 'w+') as analysisFile:
+        cw = csv.writer(analysisFile, dialect='excel', lineterminator='\n')
+        cw.writerows(csv_header)
+
+    # Write DataFrame to CSV file
+    df.to_csv(csv_file, mode='a', header='false', sep=',', na_rep='', index=False)
+    logger.info('Results written in /src folder to \'%s\' for \n\t\t\t\t\tResearch Questions #s 3,4,5,6 on Artifacts', csv_file)
 
 
 def main():
@@ -690,13 +706,13 @@ def main():
     authenticate_github_object()
 
     # Research Question #1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?
-    analyze_research_question_triggers_stages()
+    # analyze_research_question_triggers_stages()
 
     # Research Question #2
-    analyze_research_question_tools()
+    # analyze_research_question_tools()
 
     # TODO Update this comment
-    # Research Questions #3, 4, 5
+    # Research Questions #3, 4, 5, 6
     analyze_research_questions_artifacts()
 
 
