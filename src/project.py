@@ -199,6 +199,11 @@ def parse_tools(jenkinsfile):
                         # Retrieve trigger value from between parentheses and single quotes
                         re_tools_pattern = r"(?:\'|\")(.*)(?:\'|\")"
                         tool_value = re.search(re_tools_pattern, line).group(1)
+
+                        # catch case of extra colon
+                        if tool_type == 'nodejs:':
+                            tool_type = 'nodejs'
+
                         logger.debug('LINE: %s', line)
                         logger.debug('ADDING TOOL:  %s = %s', tool_type, tool_value)
                         tools_found.append({'ToolType': tool_type, 'ToolVersion': tool_value, 'Occurrence': num_tools})
@@ -379,7 +384,7 @@ def analyze_research_question_tools():
     # Create Query and Search GitHub (pipeline is used because our focus is on declarative pipeline syntax)
     # 'tools' is included in query to search for files that have the key word tools
     query = "filename:jenkinsfile q=pipeline tools"
-    num_results = 10
+    num_results = 200
     repo_data = search_and_download_jenkinsfiles(query, num_results)
     logger.info('Results received from search: %s', repo_data)
     logger.info('Number of Results received from search: %s', len(repo_data))
@@ -454,6 +459,49 @@ def analyze_research_question_tools():
     percent_per_tool = ''
     for key in tools_dict:
         percent_per_tool += str(key) + ': ' + str(round(tools_dict[key][0]/total_tools, 2)) + ', '
+
+    df_sections_summary = df.groupby('ToolType')['NumberOfTools'].count().reset_index()[1:]
+    df_sections_summary.columns = ['Section', 'Count']
+    df_sections_summary['Percentage'] = round(100 * df_sections_summary['Count'] / df_sections_summary['Count'].sum(), 2)
+    logger.debug('\nRQ#3:\n%s', df_sections_summary)
+
+    # Bar chart Number of Artifacts Archived per Section
+    ax = df_sections_summary.plot(kind='bar',
+                                  title="Number of Tools Per Section",
+                                  # grid=True,
+                                  # color='blue',
+                                  x='Section',
+                                  y='Count',
+                                  rot=0,
+                                  legend=True,
+                                  fontsize=12)
+    ax.set_xlabel("Section", fontsize=12)
+    ax.set_ylabel("Number of Tools", fontsize=12)
+
+    x_offset = -0.10
+    y_offset = 1.0
+    for p in ax.patches:
+        b = p.get_bbox()
+        val = "{:.0f}".format(b.y1 + b.y0)
+        ax.annotate(val, ((b.x0 + b.x1) / 2 + x_offset, b.y1 + y_offset))
+    plt.show()
+
+    # Pie Chart Number and Percentage of Artifacts Archived per Section
+    values = list(df_sections_summary.Count)
+    colors = ['b', 'g', 'r', 'c']
+    labels = list(df_sections_summary.Section)
+    ex = 0.00
+    explode = (ex, ex, ex, ex)
+    plt.pie(values,
+            labels=values,
+            # explode=explode,
+            shadow=False,
+            autopct='%.1f%%',
+            labeldistance=1.1)
+    plt.title('Number and Percentage of Build Tools')
+    plt.legend(labels, loc=4)
+    plt.show()
+
 
     csv_file = 'research_question_tools.csv'
     csv_header = [['Research Question 1: What types of tools are used in the pipeline?'],
@@ -804,14 +852,14 @@ def analyze_research_questions_artifacts():
 
 def main():
 
-    configure_logger(logger, 'project.log', logging.INFO)
+    configure_logger('project.log', logging.DEBUG)
     authenticate_github_object()
 
     # Research Question #1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?
     # analyze_research_question_triggers_stages()
 
     # Research Question #2
-    # analyze_research_question_tools()
+    analyze_research_question_tools()
 
     # Research Questions #3, 4, 5, 6 on 'archiveArtifacts'
     analyze_research_questions_artifacts()
