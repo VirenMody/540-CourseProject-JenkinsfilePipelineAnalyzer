@@ -706,10 +706,10 @@ def main():
     authenticate_github_object()
 
     # Research Question #1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?
-    # analyze_research_question_triggers_stages()
+    analyze_research_question_triggers_stages()
 
     # Research Question #2
-    # analyze_research_question_tools()
+    analyze_research_question_tools()
 
     # TODO Update this comment
     # Research Questions #3, 4, 5, 6
