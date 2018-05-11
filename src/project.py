@@ -1,5 +1,3 @@
-from time import sleep
-
 from github3 import GitHub
 import requests
 import pathlib
@@ -9,10 +7,12 @@ import os
 import re  # regex
 import numpy
 import csv
+import traceback
 
 import project_utils
 
 # TODO Checked for balanced brackets
+# TODO In search_and_download_jenkinsfiles, skip repos containing 'node' and other issues (after this line res = requests.get(results[i][1]))
 # TODO Artifacts Research Questions - Maybe correlation between artifact file extensions and fingerprints?
 # TODO Artifacts Research Questions - Maybe correlation between tools and artifact file extensions?
 # TODO What is the correlation between the presence of disableconcurrentbuilds() and hashes in triggers?
@@ -233,10 +233,10 @@ def search_and_download_jenkinsfiles(query, num_results):
 
         # print the whole folder name
         logger.debug("Repository %s", i+1)
-        logger.debug(results[i][2])
+        logger.debug('Downloading repo: %s', results[i][2])
 
         # Print contents of Jenkinsfile
-        logger.debug(res.text)
+        # logger.debug(res.text)
 
         github_repo_name = results[i][2]
         path_to_repo = CLONED_REPOS_DIR_PATH + str(research_topic_num) + '/' + github_repo_name
@@ -455,6 +455,7 @@ def parse_archiveArtifacts(jenkinsfile):
     logger.debug('Parsing Jenkinsfile: %s', jenkinsfile)
 
     # List used as a stack to keep track of which section 'archiveArtifacts' is in
+    post_conditions = ['always', 'changed', 'fixed', 'regression', 'aborted', 'failure', 'success', 'unstable', 'cleanup']
     section_stack = []
     artifacts_data = []
     num_artifacts = 0
@@ -466,12 +467,34 @@ def parse_archiveArtifacts(jenkinsfile):
             for idx, line in enumerate(file_lines):
                 line = line.strip()
 
+                # Skip lines that are comments
                 if line.startswith('//'):
                     continue
 
+                # TODO Keep or remove files containing 'node'?
+                # # Skip Jenkinsfiles that contain 'node' - a possible indicator for scripted pipelines
+                # if 'node' in line:
+                #     logger.warning('WARNING: Detected possible scripted pipeline - SKIPPING THIS JENKINSFILE!')
+                #     return None, None
+
                 # If there's an opening bracket, push section name onto the stack
                 if '{' in line:
-                    section_stack.append(line.strip(' {'))
+
+                    # For lines with both opening and closing brackets: if balanced, skip line, if imbalanced, skip Jenkinsfile for unparseable format
+                    if '}' in line:
+                        if line.count('{') == line.count('}'):
+                            continue
+                        else:
+                            logger.warning('WARNING: Unparseable format - SKIPPING THIS JENKINSFILE!')
+                            return None, None
+
+                    line = line.replace('{', '').replace(' ', '')
+                    # Skip the Jenkinsfile if formatting doesn't follow typical Jenkinsfile formats (open brackets on same line as section header i.e. stage('Build') { )
+                    if line == '':
+                        logger.warning('WARNING: Unparseable format - SKIPPING THIS JENKINSFILE!')
+                        return None, None
+
+                    section_stack.append(line)
 
                 # If there's a closing bracket, pop it off
                 if '}' in line:
@@ -505,7 +528,8 @@ def parse_archiveArtifacts(jenkinsfile):
                     logger.debug('EXTRACTED EXTENSION: %s', extension)
 
                     # Extract fingerprint boolean (true, false) from line
-                    re_fingerprint_pattern = r"fingerprint:\s(.*)"
+                    # re_fingerprint_pattern = r"fingerprint:\s(.*)"
+                    re_fingerprint_pattern = r"fingerprint\s*:\s*(true|false)"
                     if 'fingerprint' in line:
                         fingerprint = re.search(re_fingerprint_pattern, line).group(1)
                     # If the fingerprint is not on the current line, check the following and previous lines to accommodate different formats
@@ -529,6 +553,29 @@ def parse_archiveArtifacts(jenkinsfile):
                             fingerprint = 'true'
                     logger.debug('EXTRACTED FINGERPRINT: %s', fingerprint)
 
+                    # Extract onlyIfSuccessful boolean from line
+                    re_onlyIfSuccessful_pattern = r"onlyIfSuccessful:\s(true|false)"
+                    if 'onlyIfSuccessful' in line:
+                        onlyIfSuccessful = re.search(re_onlyIfSuccessful_pattern, line).group(1)
+                    logger.debug('EXTRACTED onlyIfSuccessful: %s', onlyIfSuccessful)
+
+                    # Extract the section the artifact is found in from the section_stack
+                    logger.debug('SECTION_STACK: %s', section_stack)
+                    for section in reversed(section_stack):
+                        logger.debug('Looking at section: %s', section)
+                        if 'stage' in section and 'stages' not in section:
+                            re_stages_pattern = r"(?:'|\")(.*)(?:'|\")"
+                            section_name = re.search(re_stages_pattern, section).group(1)
+                            section = 'stage'
+                            break
+                        elif any(section in condition for condition in post_conditions):
+                            section_name = section
+                            section = 'post'
+                            break
+                        elif 'steps' not in section and 'Archive' not in section:
+                            logger.debug('FOUND NONSTAGE NONPOST SECTION: %s in %s', section, jenkinsfile)
+                    logger.debug('EXTRACTED SECTION-SECTION_NAME: %s-%s', section, section_name)
+
                     artifacts_data.append({'Artifact': artifact,
                                             'Extension': extension,
                                             'fingerprint': fingerprint,
@@ -539,15 +586,23 @@ def parse_archiveArtifacts(jenkinsfile):
 
             # TODO Skip Jenkinsfile if brackets aren't balanced?
             if section_stack:
-                print('WARNING STACK IS NOT EMPTY!!')
-                sleep(5)
+                logger.warning('WARNING: STACK IS NOT EMPTY - Jenkinsfile brackets are imbalanced - SKIPPING THIS JENKINSFILE!')
+                return None, None
 
-    # Catch AttributeErrors: Most commonly occurs when the above keywords are found in a context other than designed for (i.e. the word 'stage' is found in the comments)
+    # Catch:
+    # - IndexErrors: Most commonly occurs when there's an imbalance in opening and closing brackets in section_stack
+    # - AttributeErrors: Most commonly occurs when the above keywords are found in a context other than designed for (i.e. the word 'stage' is found in the comments)
+    except IndexError as error:
+        logger.error('ERROR: %s - Jenkinsfile brackets are imbalanced - SKIPPING THIS JENKINSFILE', error)
+        traceback.print_stack()
+        return None, None
     except AttributeError as error:
-        logger.error('%s: SKIPPING THIS JENKINSFILE', error)
+        logger.error('ERROR: %s - SKIPPING THIS JENKINSFILE', error)
+        traceback.print_stack()
         return None, None
     except Exception as exception:
-        logger.error('%s: SKIPPING THIS JENKINSFILE', exception)
+        logger.error('EXCEPTION: %s - SKIPPING THIS JENKINSFILE', exception)
+        traceback.print_stack()
         return None, None
 
     logger.debug('ARTIFACTS: %s', artifacts_data)
@@ -572,8 +627,8 @@ def analyze_research_questions_artifacts():
     df = project_utils.create_df(df_headers)
 
     # Query for GitHub Jenkinsfile search ('pipeline' is used because our focus is on declarative pipeline syntax): TODO Change num_results as per your preference
-    query = "filename:jenkinsfile q=pipeline archiveartifacts tools"
-    num_results = 100
+    query = "filename:jenkinsfile q=pipeline archiveartifacts"
+    num_results = 50
     repo_data = search_and_download_jenkinsfiles(query, num_results)
     logger.info('Results received from search: %s', repo_data)
 
@@ -636,10 +691,10 @@ def main():
     authenticate_github_object()
 
     # Research Question #1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?
-    # analyze_research_question_triggers_stages()
+    analyze_research_question_triggers_stages()
 
     # Research Question #2
-    # analyze_research_question_tools()
+    analyze_research_question_tools()
 
     # TODO Update this comment
     # Research Questions #3, 4, 5

@@ -71,11 +71,11 @@ def search_by_code(git_hub, my_query, num):
 
         # split string at = and save only the hash value
         blob_hash = blob_hash_string.split('=')[1]
-        logger.debug("Github blob hash: %s", blob_hash)
+        # logger.debug("Github blob hash: %s", blob_hash)
 
         # create raw URL from repository details and blob hash
         raw_url = "https://raw.githubusercontent.com/" + item.repository.full_name + '/' + blob_hash + '/' + item.path
-        logger.debug("raw_url: %s", raw_url)
+        # logger.debug("raw_url: %s", raw_url)
 
         results.append((result_object, raw_url, item.repository.full_name))
 
