@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 from github3 import GitHub
 import requests
 import pathlib
@@ -601,7 +602,7 @@ def parse_archiveArtifacts(jenkinsfile):
                             break
                         elif any(section in condition for condition in post_conditions):
                             section_name = section
-                            section = 'post'
+                            section = 'post-' + section
                             break
                         elif 'steps' not in section and 'Archive' not in section:
                             logger.debug('FOUND NONSTAGE NONPOST SECTION: %s in %s', section, jenkinsfile)
@@ -615,7 +616,6 @@ def parse_archiveArtifacts(jenkinsfile):
                                             'SectionName': section_name,
                                             'Occurrence': num_artifacts})
 
-            # TODO Skip Jenkinsfile if brackets aren't balanced?
             if section_stack:
                 logger.warning('WARNING: STACK IS NOT EMPTY - Jenkinsfile brackets are imbalanced - SKIPPING THIS JENKINSFILE!')
                 return None, None
@@ -660,7 +660,7 @@ def analyze_research_questions_artifacts():
 
     # Query for GitHub Jenkinsfile search ('pipeline' is used because our focus is on declarative pipeline syntax): TODO Change num_results as per your preference
     query = "filename:jenkinsfile q=pipeline archiveartifacts"
-    num_results = 200
+    num_results = 50
     repo_data = search_and_download_jenkinsfiles(query, num_results)
     logger.info('Results received from search: %s', repo_data)
 
@@ -707,7 +707,66 @@ def analyze_research_questions_artifacts():
             new_row = [[repo_num_str, username, repo_name, artifact, extension, fingerprint, onlyIfSuccessful, parent_section, section_name, occurrence]]
             df = project_utils.add_row_to_df(df, df_headers, new_row)
 
-    logger.debug('Total Number of Artifacts: %s', total_num_artifacts)
+    logger.info('Total Number of Repos Analyzed: %s', repo_num)
+    logger.info('Total Number of Artifacts: %s', total_num_artifacts)
+    avg_artifacts_per_repo = round((total_num_artifacts/repo_num), 2)
+    logger.info('Average Number of Artifacts Per Repo: %s', avg_artifacts_per_repo)
+
+    # Research Question #3: In which pipeline sections or pipeline directives are artifacts most frequently and least frequently archived?
+    df_sections_summary = df.groupby('ParentSection')['Occurrence'].count().reset_index()
+    df_sections_summary.columns = ['Section', 'Count']
+    df_sections_summary['Percentage'] = round(100 * df_sections_summary['Count'] / df_sections_summary['Count'].sum(), 2)
+    logger.debug('\nRQ#3:\n%s', df_sections_summary)
+
+    # Bar chart Number of Artifacts Archived per Section
+    ax = df_sections_summary.plot(kind='bar',
+                                  title="Number of Artifacts Archived Per Section",
+                                  # grid=True,
+                                  # color='blue',
+                                  x='Section',
+                                  y='Count',
+                                  rot=0,
+                                  legend=True,
+                                  fontsize=12)
+    ax.set_xlabel("Section", fontsize=12)
+    ax.set_ylabel("Number of Artifacts", fontsize=12)
+
+    x_offset = -0.10
+    y_offset = 1.0
+    for p in ax.patches:
+        b = p.get_bbox()
+        val = "{:.0f}".format(b.y1 + b.y0)
+        ax.annotate(val, ((b.x0 + b.x1) / 2 + x_offset, b.y1 + y_offset))
+    plt.show()
+
+    # Pie Chart Number and Percentage of Artifacts Archived per Section
+    values = list(df_sections_summary.Count)
+    colors = ['b', 'g', 'r', 'c']
+    labels = list(df_sections_summary.Section)
+    ex = 0.00
+    explode = (ex, ex, ex, ex)
+    plt.pie(values,
+            labels=values,
+            # explode=explode,
+            shadow=False,
+            autopct='%.1f%%',
+            labeldistance=1.1)
+    plt.title('Number and Percentage of Artifacts Archived Per Section')
+    plt.legend(labels, loc=4)
+    plt.show()
+
+    # Research Question #4: Which file extensions are most frequently and least frequently archived?(.exe, .jar, everything, etc.)
+    # df_extensions_summary = df.groupby('Extension')['Occurrence'].count().reset_index()
+    # df_extensions_summary.columns = ['Extension', 'Count']
+    # df_extensions_summary.sort_values(by='Count', inplace=True)
+    # df_extensions_summary['Percentage'] = round(100 * df_extensions_summary['Count'] / df_extensions_summary['Count'].sum(), 2)
+    # print(df_extensions_summary)
+    # print(type(df_extensions_summary))
+    # print('\n')
+    # logger.debug('\nRQ#4:\n%s', df_extensions_summary)
+    # Research Question #5: What percentage of archived artifacts are archived with a fingerprint?
+    # Research Question #6: Which archived artifact file extensions are most frequently and least frequently fingerprinted?
+
     csv_file = 'research_question_artifacts.csv'
     csv_header = [['Research Question #3: In which pipeline sections or pipeline directives are artifacts most frequently and least frequently archived?'],
                   ['Answer: '],
@@ -738,13 +797,12 @@ def main():
     authenticate_github_object()
 
     # Research Question #1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?
-    analyze_research_question_triggers_stages()
+    # analyze_research_question_triggers_stages()
 
     # Research Question #2
-    analyze_research_question_tools()
+    # analyze_research_question_tools()
 
-    # TODO Update this comment
-    # Research Questions #3, 4, 5, 6
+    # Research Questions #3, 4, 5, 6 on 'archiveArtifacts'
     analyze_research_questions_artifacts()
 
 
