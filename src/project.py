@@ -9,6 +9,8 @@ import numpy
 import csv
 import traceback
 
+import unittest
+
 import project_utils
 
 # TODO Checked for balanced brackets
@@ -36,7 +38,7 @@ git_hub = None
 logger = logging.getLogger('project')
 
 
-def configure_logger():
+def configure_logger(file_name, level):
     """
     Function configures logger level, format, and output stream
 
@@ -51,8 +53,8 @@ def configure_logger():
     """
 
     # TODO change logger level to your preference
-    LOG_FILENAME = 'project.log'
-    logger.setLevel(logging.DEBUG)
+    LOG_FILENAME = file_name
+    logger.setLevel(level)
     formatter = logging.Formatter('%(levelname)s:%(filename)s: In %(funcName)s(): On Line: %(lineno)d: %(message)s')
 
     # Setup output log to console and to a file
@@ -359,6 +361,7 @@ def analyze_research_question_triggers_stages():
     logger.info('Results written in /src folder to \'%s\' for \n\t\t\t\t\tResearch Question 1: How does the number of triggers in a pipeline correlate with the number of stages '
                 'in the pipeline?', csv_file)
 
+    return csv_file
 
 # TODO Function documentation comments
 def analyze_research_question_tools():
@@ -375,7 +378,7 @@ def analyze_research_question_tools():
     # Create Query and Search GitHub (pipeline is used because our focus is on declarative pipeline syntax)
     # 'tools' is included in query to search for files that have the key word tools
     query = "filename:jenkinsfile q=pipeline tools"
-    num_results = 100
+    num_results = 10
     repo_data = search_and_download_jenkinsfiles(query, num_results)
     logger.info('Results received from search: %s', repo_data)
     logger.info('Number of Results received from search: %s', len(repo_data))
@@ -473,6 +476,8 @@ def analyze_research_question_tools():
     df.to_csv(csv_file, mode='a', header='false', sep=',', na_rep='', index=False)
     logger.info('Results written in /src folder to \'%s\' for \n\t\t\t\t\tResearch Question 1: How does the number of triggers in a pipeline correlate with the number of stages '
                 'in the pipeline?', csv_file)
+
+    return csv_file
 
 
 def parse_archiveArtifacts(jenkinsfile):
@@ -660,7 +665,7 @@ def analyze_research_questions_artifacts():
 
     # Query for GitHub Jenkinsfile search ('pipeline' is used because our focus is on declarative pipeline syntax): TODO Change num_results as per your preference
     query = "filename:jenkinsfile q=pipeline archiveartifacts"
-    num_results = 200
+    num_results = 10
     repo_data = search_and_download_jenkinsfiles(query, num_results)
     logger.info('Results received from search: %s', repo_data)
 
@@ -732,9 +737,14 @@ def analyze_research_questions_artifacts():
     df.to_csv(csv_file, mode='a', header='false', sep=',', na_rep='', index=False)
     logger.info('Results written in /src folder to \'%s\' for \n\t\t\t\t\tResearch Questions #s 3,4,5,6 on Artifacts', csv_file)
 
+    return csv_file
+
+
+
 
 def main():
-    configure_logger()
+
+    configure_logger(logger, 'project.log', logging.INFO)
     authenticate_github_object()
 
     # Research Question #1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?
@@ -743,7 +753,6 @@ def main():
     # Research Question #2
     analyze_research_question_tools()
 
-    # TODO Update this comment
     # Research Questions #3, 4, 5, 6
     analyze_research_questions_artifacts()
 
