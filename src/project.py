@@ -161,7 +161,6 @@ def parse_tools(jenkinsfile):
     :return: list of triggers, list of stages and number of triggers and stages
     """
     logger.debug('Parsing Jenkinsfile: %s', jenkinsfile)
-    tools = ['maven', 'jdk', 'nodejs']
     tools_found = []
     tool_type = ''
     num_tools = 0
@@ -174,6 +173,8 @@ def parse_tools(jenkinsfile):
             for line in file:
                 line = line.strip('\n')
 
+                if line[:2] == '//':
+                    continue
                 if "tools" in line:
                     capture_tools = True
                     continue
@@ -181,19 +182,23 @@ def parse_tools(jenkinsfile):
                     capture_tools = False
                     break
                 elif capture_tools is True:
-                    num_tools += 1
 
                     # strip white space from beginning of line
                     str = line.lstrip()
                     # save the first part of the string before the space as a tool type
                     tool_type = str.partition(' ')[0]
 
-                    # Retrieve trigger value from between parentheses and single quotes
-                    re_tools_pattern = r"(?:\'|\")(.*)(?:\'|\")"
-                    tool_value = re.search(re_tools_pattern, line).group(1)
-                    logger.debug('LINE: %s', line)
-                    logger.debug('ADDING TOOL:  %s = %s', tool_type, tool_value)
-                    tools_found.append({'ToolType': tool_type, 'ToolVersion': tool_value, 'Occurrence': num_tools})
+                    if tool_type == '{' or tool_type == '//':
+                        continue
+                    else:
+                        num_tools += 1
+
+                        # Retrieve trigger value from between parentheses and single quotes
+                        re_tools_pattern = r"(?:\'|\")(.*)(?:\'|\")"
+                        tool_value = re.search(re_tools_pattern, line).group(1)
+                        logger.debug('LINE: %s', line)
+                        logger.debug('ADDING TOOL:  %s = %s', tool_type, tool_value)
+                        tools_found.append({'ToolType': tool_type, 'ToolVersion': tool_value, 'Occurrence': num_tools})
 
 
         # Catch AttributeErrors: Most commonly occurs when the above keywords are found in a context other than designed for (i.e. the word 'stage' is found in the comments)
@@ -364,16 +369,18 @@ def analyze_research_question_tools():
     logger.info('Analyzing Jenkinsfiles for Research Question 2: What types of tools are used in the pipeline?')
 
     # Format Dataframe with variables that function will be filling in
-    df_headers = ['RepoNum', 'Username', 'RepositoryName', 'ToolType', 'ToolVersion', 'TriggerOccurrence']
+    df_headers = ['RepoNum', 'Username', 'RepositoryName', 'ToolType', 'ToolVersion', 'NumberOfTools']
     df = project_utils.create_df(df_headers)
 
     # Create Query and Search GitHub (pipeline is used because our focus is on declarative pipeline syntax)
     # 'tools' is included in query to search for files that have the key word tools
     query = "filename:jenkinsfile q=pipeline tools"
-    num_results = 50
+    num_results = 100
     repo_data = search_and_download_jenkinsfiles(query, num_results)
     logger.info('Results received from search: %s', repo_data)
     logger.info('Number of Results received from search: %s', len(repo_data))
+
+    tools_dict = {}
 
     repo_num = 0
     for repo in repo_data:
@@ -411,10 +418,20 @@ def analyze_research_question_tools():
                 tool_value = tool['ToolVersion']
                 tool_occurrence = tool['Occurrence']
 
+                #add to tool type and tool occurrence dictionaries
+                if tool_type not in tools_dict:
+                    tools_dict[tool_type] = [1, [tool_value]]
+                    logger.debug("Add key to tools_dict: %s Add value to tools_dict: %s", tool_type, tool_value)
+                else:
+                    current_value = tools_dict[tool_type]
+                    current_value[1].append(tool_value)
+                    current_value[0] = current_value[0]+1
+                    tools_dict[tool_type] = current_value
+
             repo_num_str = str(repo_num) if iteration == 0 else ''
 
             new_row = [[repo_num_str, username, repo_name, tool_type, tool_value, tool_occurrence]]
-            logger.debug("Username: %s Repo Name: %s Tool Type: %s Tool Value: %s Tool Occurrence: %s",
+            logger.debug("Username: %s Repo Name: %s Tool Type: %s Tool Value: %s Number of Tools: %s",
                          username, repo_name, tool_type, tool_value, tool_occurrence)
             df = project_utils.add_row_to_df(df, df_headers, new_row)
 
@@ -427,10 +444,25 @@ def analyze_research_question_tools():
         # Insert blank row for increased readability
         df = project_utils.add_blank_row_to_df(df, df_headers)
 
+    total_tools = sum(i[0] for i in tools_dict.values())
+    average_tools_per_repository = round(total_tools/repo_num, 4)
+
+    percent_per_tool = ''
+    for key in tools_dict:
+        percent_per_tool += str(key) + ': ' + str(round(tools_dict[key][0]/total_tools, 2)) + ', '
+
     csv_file = 'research_question_tools.csv'
     csv_header = [['Research Question 1: What types of tools are used in the pipeline?'],
+                  ['Repositories with Jenkinsfiles downloaded from GitHub: ' + str(num_results)],
+                  ['Number of Jenkinsfiles suitable for parsing: ' + str(repo_num)],
+                  ['Number of Different Build Tools: ' + str(len(tools_dict))],
+                  ['Different Types of Build Tools: ' + str(list(tools_dict.keys()))],
+                  ['Average Number of Build Tools Used Per Repository: ' + str(average_tools_per_repository)],
+                  ['Frequency of Build Tool Use by Repository: ' + percent_per_tool],
                   ['\n'],
                   ['Parsed Jenkinsfile Data']]
+
+    logger.debug("Tools Dictionary: %s", tools_dict)
 
     # Write to CSV file
     with open(csv_file, 'w+') as analysisFile:
