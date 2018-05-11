@@ -580,7 +580,7 @@ def parse_archiveArtifacts(jenkinsfile):
                                             'Extension': extension,
                                             'fingerprint': fingerprint,
                                             'onlyIfSuccessful': onlyIfSuccessful,
-                                            'FoundInSection': section,
+                                            'ParentSection': section,
                                             'SectionName': section_name,
                                             'Occurrence': num_artifacts})
 
@@ -623,7 +623,7 @@ def analyze_research_questions_artifacts():
                 'What percentage of archived artifacts are archived with a fingerprint?')
 
     # Create DataFrame to store all data
-    df_headers = ['RepoNum', 'Username', 'RepositoryName', 'Artifact', 'Extension', 'fingerprint', 'onlyIfSuccessful', 'FoundInSection', 'SectionName', 'Occurrence']
+    df_headers = ['RepoNum', 'Username', 'RepositoryName', 'Artifact', 'Extension', 'fingerprint', 'onlyIfSuccessful', 'ParentSection', 'SectionName', 'Occurrence']
     df = project_utils.create_df(df_headers)
 
     # Query for GitHub Jenkinsfile search ('pipeline' is used because our focus is on declarative pipeline syntax): TODO Change num_results as per your preference
@@ -634,6 +634,7 @@ def analyze_research_questions_artifacts():
 
     # For each repo from the search results, parse the Jenkinsfile for data on 'archiveArtifacts', and store it for analysis
     repo_num = 0
+    total_num_artifacts = 0
     for repo in repo_data:
         repo_num += 1
         username = repo['Username']
@@ -654,36 +655,34 @@ def analyze_research_questions_artifacts():
             repo_num -= 1
             continue
 
-        # # Store parsed data in DataFrame for analyzing
-        # combined_data = list(itertools.zip_longest(triggers_data, stages_data))
-        # for iteration, data in enumerate(combined_data):
-        #     trigger, stage = data
-        #     trigger_type = ''
-        #     trigger_value = ''
-        #     trigger_occurrence = ''
-        #     stage_name = ''
-        #     stage_occurrence = 0
-        #     if trigger is not None:
-        #         trigger_type = trigger['Type']
-        #         trigger_value = trigger['Value']
-        #         trigger_occurrence = trigger['Occurrence']
-        #     if stage is not None:
-        #         stage_name = stage['Name']
-        #         stage_occurrence = stage['Occurrence']
-        #
-        #     repo_num_str = str(repo_num) if iteration == 0 else ''
-        #
-        #     # Add parsed data to DataFrame
-        #     new_row = [[repo_num_str, username, repo_name, trigger_type, trigger_value, trigger_occurrence, stage_name, stage_occurrence]]
-        #     df = project_utils.add_row_to_df(df, df_headers, new_row)
-        #
-        #     # Do not repeat username and repo_name for output readability
-        #     if iteration == 0:
-        #         username = ''
-        #         repo_name = ''
-        #
-        # # Insert blank row for increased readability
+        total_num_artifacts += num_artifacts
+
+        # Store parsed data in DataFrame for analyzing
+        for iteration, data in enumerate(artifacts_data):
+            artifact = data['Artifact']
+            extension = data['Extension']
+            fingerprint = data['fingerprint']
+            onlyIfSuccessful = data['onlyIfSuccessful']
+            parent_section = data['ParentSection']
+            section_name = data['SectionName']
+            occurrence = data['Occurrence']
+
+            # repo_num_str = str(repo_num) if iteration == 0 else ''
+            repo_num_str = str(repo_num)
+
+            # Add parsed data to DataFrame
+            df_headers = ['RepoNum', 'Username', 'RepositoryName', 'Artifact', 'Extension', 'fingerprint', 'onlyIfSuccessful', 'ParentSection', 'SectionName', 'Occurrence']
+            new_row = [[repo_num_str, username, repo_name, artifact, extension, fingerprint, onlyIfSuccessful, parent_section, section_name, occurrence]]
+            df = project_utils.add_row_to_df(df, df_headers, new_row)
+
+            # # Do not repeat username and repo_name for output readability
+            # if iteration == 0:
+            #     username = ''
+            #     repo_name = ''
+
+        # Insert blank row for increased readability
         # df = project_utils.add_blank_row_to_df(df, df_headers)
+    logger.info(df)
 
 
 def main():
