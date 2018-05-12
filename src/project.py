@@ -228,7 +228,7 @@ def search_and_download_jenkinsfiles(query, num_results):
     logger.info('Searching GitHub for %s results with query: %s', num_results, query)
     results = project_utils.search_by_code(git_hub, query, num_results)
     logger.debug("Results from project.search_by_code: %s", results)
-    logger.info('Downloading repository results from GitHub Search', num_results, query)
+    logger.info('Downloading repository results from GitHub Search')
 
     # Increment research_topic_num for each research topic to separate jenkinsfiles that are downloaded
     global research_topic_num
@@ -677,18 +677,16 @@ def rq3_chart_data(df_sections):
     Function charts rq3 data to bar graph and pie chart
     :param df_sections:
     """
-    # Bar chart Number of Artifacts Archived per Section
+    # Bar chart RQ3: Number of Artifacts Archived per Section
     ax = df_sections.plot(kind='bar',
-                          title="Number of Artifacts Archived Per Section",
-                          # grid=True,
-                          # color='blue',
+                          title="RQ3: Number of Artifacts Archived Per Section",
                           x='Section',
                           y='NumArtifacts',
                           rot=0,
                           legend=False,
                           fontsize=12)
     ax.set_xlabel("Section", fontsize=12)
-    ax.set_ylabel("Number of Artifacts", fontsize=12)
+    ax.set_ylabel("Number of Archived Artifacts", fontsize=12)
 
     # Annotate bar graph with values of each bar
     x_offset = -0.10
@@ -699,16 +697,16 @@ def rq3_chart_data(df_sections):
         ax.annotate(val, ((b.x0 + b.x1) / 2 + x_offset, b.y1 + y_offset))
     plt.show()
 
-    # Pie Chart Number and Percentage of Artifacts Archived per Section
+    # Pie Chart RQ3: Number and Percentage of Artifacts Archived per Section
     values = list(df_sections['NumArtifacts'])
     labels = list(df_sections['Section'])
     plt.pie(values,
             labels=values,
-            shadow=False,
+            counterclock=True,
             autopct='%.1f%%',
             labeldistance=1.1)
-    plt.title('Number and Percentage of Artifacts Archived Per Section')
-    plt.legend(labels, loc=4)
+    plt.title('RQ3: Number and Percentage of Artifacts Archived Per Section')
+    plt.legend(labels, loc=3)
     plt.show()
 
 
@@ -771,18 +769,16 @@ def rq4_chart_data(df_extensions):
     Function charts rq4 data to bar graph and pie chart
     :param df_extensions:
     """
-    # Bar chart Number of Artifacts per Extension
+    # Bar chart RQ4: Number of Artifacts per Extension
     ax = df_extensions.plot(kind='bar',
-                            title="Number of Artifacts Per Extension",
-                            #                               grid=True,
-                            #                               color='blue',
+                            title="RQ4: Number of Artifacts Archived Per Extension",
                             x='Extension',
                             y='NumArtifacts',
                             rot=0,
                             legend=False,
                             fontsize=12)
     ax.set_xlabel("Extension", fontsize=12)
-    ax.set_ylabel("Number of Artifacts", fontsize=12)
+    ax.set_ylabel("Number of Archived Artifacts", fontsize=12)
 
     # Annotate bar graph with values of each bar
     x_offset = -0.10
@@ -798,11 +794,10 @@ def rq4_chart_data(df_extensions):
     labels = list(df_extensions['Extension'])
     plt.pie(values,
             labels=values,
-            shadow=False,
             autopct='%.1f%%',
             labeldistance=1.1,
             counterclock=False)
-    plt.title('Number and Percentage of Artifacts Archived Per Extension')
+    plt.title('RQ4: Number and Percentage of Artifacts Archived Per Extension')
     plt.legend(labels, loc="lower right", fontsize=9)
     plt.show()
 
@@ -894,46 +889,83 @@ def rq6_write_to_csv(df_fingerprint_raw, df_fingerprint_extension):
                 'fingerprinted?', csv_file)
 
 
-# def rq56_chart_data(df_fingerprint):
-#     """
-#     Function charts rq5 and rq6 data to bar graph and pie chart
-#     :param df_fingerprint:
-#     """
-#     # Bar chart Number of Artifacts per Extension
-#     ax = df_extensions.plot(kind='bar',
-#                             title="Number of Artifacts Per Extension",
-#                             #                               grid=True,
-#                             #                               color='blue',
-#                             x='Extension',
-#                             y='NumArtifacts',
-#                             rot=0,
-#                             legend=False,
-#                             fontsize=12)
-#     ax.set_xlabel("Extension", fontsize=12)
-#     ax.set_ylabel("Number of Artifacts", fontsize=12)
-#
-#     # Annotate bar graph with values of each bar
-#     x_offset = -0.10
-#     y_offset = 0.8
-#     for p in ax.patches:
-#         b = p.get_bbox()
-#         val = "{:.0f}".format(b.y1 + b.y0)
-#         ax.annotate(val, ((b.x0 + b.x1) / 2 + x_offset, b.y1 + y_offset))
-#     plt.show()
-#
-#     # Pie Chart Number and Percentage of Artifacts Archived per Extension
-#     values = list(df_extensions['NumArtifacts'])
-#     labels = list(df_extensions['Extension'])
-#     plt.pie(values,
-#             labels=values,
-#             shadow=False,
-#             autopct='%.1f%%',
-#             labeldistance=1.1,
-#             counterclock=False)
-#     plt.title('Number and Percentage of Artifacts Archived Per Extension')
-#     plt.legend(labels, loc="lower right", fontsize=9)
-#     plt.show()
+def rq5_chart_data(df_fingerprint_tf):
 
+    """
+    Function charts rq5 data to bar graph and pie chart
+    :param df_fingerprint_tf:
+    """
+    # Bar chart RQ5: Number of Artifacts Archived Fingerprinted
+    ax = df_fingerprint_tf.plot(kind='bar',
+                                title="RQ5: Number of Artifacts Archived that are Fingerprinted",
+                                x='fingerprint',
+                                y='NumArtifacts',
+                                rot=0,
+                                legend=False,
+                                fontsize=12)
+    ax.set_xlabel("Extension", fontsize=12)
+    ax.set_ylabel("Number of Archived Artifacts", fontsize=12)
+
+    # Annotate bar graph with values of each bar
+    x_offset = -0.10
+    y_offset = 0.8
+    for p in ax.patches:
+        b = p.get_bbox()
+        val = "{:.0f}".format(b.y1 + b.y0)
+        ax.annotate(val, ((b.x0 + b.x1) / 2 + x_offset, b.y1 + y_offset))
+    plt.show()
+
+    # Pie Chart RQ5: Number and Percentage of Archived Artifacts Fingerprinted
+    values = list(df_fingerprint_tf['NumArtifacts'])
+    labels = list(df_fingerprint_tf['fingerprint'])
+    plt.pie(values,
+            labels=values,
+            shadow=False,
+            autopct='%.1f%%',
+            labeldistance=1.1)
+    plt.title('RQ5: Number and Percentage of Archived Artifacts that are Fingerprinted')
+    plt.legend(labels, loc=4)
+    plt.show()
+
+
+def rq6_chart_data(df_fingerprint_extension):
+
+    """
+    Function charts rq5 data to bar graph and pie chart
+    :param df_fingerprint_extension:
+    """
+    # Bar chart RQ6: Number of Artifacts Archived Fingerprinted Per Extension
+    ax = df_fingerprint_extension.plot(kind='bar',
+                                       title="RQ6: Number of Artifacts Archived Fingerprinted Per Extension",
+                                       x='Extension',
+                                       y='NumArtifacts',
+                                       rot=0,
+                                       legend=False,
+                                       fontsize=12)
+    ax.set_xlabel("Extension", fontsize=12)
+    ax.set_ylabel("Number of Archived Artifacts", fontsize=12)
+
+    # Annotate bar graph with values of each bar
+    x_offset = -0.10
+    y_offset = 0.8
+    for p in ax.patches:
+        b = p.get_bbox()
+        val = "{:.0f}".format(b.y1 + b.y0)
+        ax.annotate(val, ((b.x0 + b.x1) / 2 + x_offset, b.y1 + y_offset))
+    plt.show()
+
+    # Pie Chart RQ6: Number and Percentage of Archived Artifacts Fingerprinted Per Extension
+    values = list(df_fingerprint_extension['NumArtifacts'])
+    labels = list(df_fingerprint_extension['Extension'])
+    plt.pie(values,
+            labels=values,
+            counterclock=False,
+            autopct='%.1f%%',
+            pctdistance=.7,
+            labeldistance=1.1)
+    plt.title('RQ6: Number and Percent of Archived Artifacts Fingerprinted Per Extension')
+    plt.legend(labels, loc=3, fontsize=10)
+    plt.show()
 
 def analyze_research_question_56_artifacts_fingerprints(df):
     """
@@ -960,14 +992,21 @@ def analyze_research_question_56_artifacts_fingerprints(df):
     df_fingerprint_extension = df_fingerprint_raw.drop(['RepoNum', 'Username', 'RepositoryName'], axis=1)
     df_fingerprint_extension = df_fingerprint_extension.groupby(['fingerprint', 'Extension']).size().reset_index()
     df_fingerprint_extension.columns = ['fingerprint', 'Extension', 'NumArtifacts']
-    df_fingerprint_extension['Percentage'] = round(100 * df_fingerprint_extension['NumArtifacts'] / df_fingerprint_extension['NumArtifacts'].sum(), 1)
     df_fingerprint_extension.sort_values(['fingerprint', 'NumArtifacts'], ascending=[False, False], inplace=True)
     df_fingerprint_extension.reset_index(inplace=True, drop=True)
     df_fingerprint_extension = df_fingerprint_extension[df_fingerprint_extension['fingerprint'] == 'true']
+    df_fingerprint_extension['Percentage'] = round(100 * df_fingerprint_extension['NumArtifacts'] / df_fingerprint_extension['NumArtifacts'].sum(), 1)
+    # Filter out values that occur less than 2% of the time
+    df_fingerprint_extension = df_fingerprint_extension[df_fingerprint_extension['Percentage'] >= 2.0]
+    df_fingerprint_extension.reset_index(inplace=True, drop=True)
+    df_fingerprint_extension['Percentage'] = round(100 * df_fingerprint_extension['NumArtifacts'] / df_fingerprint_extension['NumArtifacts'].sum(), 1)
     logger.debug('\nRQ#6:\n%s', df_fingerprint_extension)
 
     rq5_write_to_csv(df_fingerprint_raw, df_fingerprint_tf)
     rq6_write_to_csv(df_fingerprint_raw, df_fingerprint_extension)
+
+    rq5_chart_data(df_fingerprint_tf)
+    rq6_chart_data(df_fingerprint_extension)
 
 def analyze_research_questions_artifacts():
     """
