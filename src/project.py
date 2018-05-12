@@ -16,6 +16,7 @@ import unittest
 import project_utils
 
 # TODO Checked for balanced brackets
+# TODO Change filename number for rq 1 and 2
 # TODO In search_and_download_jenkinsfiles, skip repos containing 'node' and other issues (after this line res = requests.get(results[i][1]))
 # TODO Artifacts Research Questions - Maybe correlation between tools and artifact file extensions?
 # TODO What is the correlation between the presence of disableconcurrentbuilds() and hashes in triggers?
@@ -235,6 +236,7 @@ def search_and_download_jenkinsfiles(query, num_results):
     logger.info('Searching GitHub for %s results with query: %s', num_results, query)
     results = project_utils.search_by_code(git_hub, query, num_results)
     logger.debug("Results from project.search_by_code: %s", results)
+    logger.info('Downloading repository results from GitHub Search')
 
     # Increment research_topic_num for each research topic to separate jenkinsfiles that are downloaded
     global research_topic_num
@@ -245,8 +247,7 @@ def search_and_download_jenkinsfiles(query, num_results):
         res = requests.get(results[i][1])
 
         # print the whole folder name
-        # logger.debug("Repository %s", i+1)
-        # logger.debug('Downloading repo: %s', results[i][2])
+        logger.debug('Downloading Repository %s: %s', i+1, results[i][2])
 
         # Print contents of Jenkinsfile
         # logger.debug(res.text)
@@ -352,7 +353,7 @@ def analyze_research_question_triggers_stages():
     correlation_coefficient = round(numpy.corrcoef(trigger_counts, stage_counts)[0, 1], 5)
     logger.info('Pearson Correlation Coefficient between Trigger and Stage Counts: %s', correlation_coefficient)
 
-    csv_file = 'research_question_stages_triggers.csv'
+    csv_file = 'research_question_1_stages_triggers.csv'
     csv_header = [['Research Question 1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?'],
                   ['Correlation Coefficient: ' + str(correlation_coefficient)],
                   ['\n'],
@@ -705,6 +706,374 @@ def parse_archiveArtifacts(jenkinsfile):
     return artifacts_data, num_artifacts
 
 
+def rq3_write_to_csv(df_sections_raw, df_sections):
+    """
+    Function writes data for research question 3 to csv files
+    :param df_sections_raw:
+    :param df_sections:
+    """
+    csv_file = 'research_question_3_artifacts_sections.csv'
+    csv_q3_header = [['Research Question #3: In which pipeline sections or pipeline directives are artifacts most frequently and least frequently archived?'],
+                     ['Answer: ']]
+    csv_parsed_data_header = [['\n'], ['Jenkinsfile Parsed Data for Artifacts and Sections']]
+
+    # Write RQ3 Header to CSV file
+    with open(csv_file, 'w+') as analysisFile:
+        cw = csv.writer(analysisFile, dialect='excel', lineterminator='\n')
+        cw.writerows(csv_q3_header)
+
+    # Write DataFrame to CSV file
+    df_sections.to_csv(csv_file, mode='a', header='false', sep=',', na_rep='', index=False)
+
+    # Write Parsed Data Header to CSV file
+    with open(csv_file, 'a') as analysisFile:
+        cw = csv.writer(analysisFile, dialect='excel', lineterminator='\n')
+        cw.writerows(csv_parsed_data_header)
+
+    # Write DataFrame to CSV file
+    df_sections_raw.to_csv(csv_file, mode='a', header='false', sep=',', na_rep='', index=False)
+    logger.info('Results written in /src folder to \'%s\' for \n\t\t\t\t\tResearch Question #3 In which pipeline sections or pipeline directives are artifacts most frequently '
+                'and least frequently archived?', csv_file)
+
+
+def rq3_chart_data(df_sections):
+    """
+    Function charts rq3 data to bar graph and pie chart
+    :param df_sections:
+    """
+    # Bar chart RQ3: Number of Artifacts Archived per Section
+    ax = df_sections.plot(kind='bar',
+                          title="RQ3: Number of Artifacts Archived Per Section",
+                          x='Section',
+                          y='NumArtifacts',
+                          rot=0,
+                          legend=False,
+                          fontsize=12)
+    ax.set_xlabel("Section", fontsize=12)
+    ax.set_ylabel("Number of Archived Artifacts", fontsize=12)
+
+    # Annotate bar graph with values of each bar
+    x_offset = -0.10
+    y_offset = 0.3
+    for p in ax.patches:
+        b = p.get_bbox()
+        val = "{:.0f}".format(b.y1 + b.y0)
+        ax.annotate(val, ((b.x0 + b.x1) / 2 + x_offset, b.y1 + y_offset))
+    plt.show()
+
+    # Pie Chart RQ3: Number and Percentage of Artifacts Archived per Section
+    values = list(df_sections['NumArtifacts'])
+    labels = list(df_sections['Section'])
+    plt.pie(values,
+            labels=values,
+            counterclock=True,
+            autopct='%.1f%%',
+            labeldistance=1.1)
+    plt.title('RQ3: Number and Percentage of Artifacts Archived Per Section')
+    plt.legend(labels, loc=3)
+    plt.show()
+
+
+def analyze_research_question_3_artifacts_sections(df):
+    """
+    Function processes artifacts DataFrame for
+    Research Question #3: In which pipeline sections or pipeline directives are artifacts most frequently and least frequently archived?
+    :param df:
+    """
+    # Research Question #3: In which pipeline sections or pipeline directives are artifacts most frequently and least frequently archived?
+    df_sections_raw = df.drop(['Extension', 'fingerprint', 'onlyIfSuccessful'], axis=1)
+    df_sections = df.groupby('ParentSection')['Occurrence'].count().reset_index()
+    df_sections.columns = ['Section', 'NumArtifacts']
+    df_sections['Percentage'] = round(100 * df_sections['NumArtifacts'] / df_sections['NumArtifacts'].sum(), 1)
+    df_sections.sort_values(by='NumArtifacts', inplace=True, ascending=False)
+    df_sections.reset_index(inplace=True, drop=True)
+    logger.debug('\nRQ#3:\n%s', df_sections)
+
+    rq3_write_to_csv(df_sections_raw, df_sections)
+    rq3_chart_data(df_sections)
+
+
+def rq4_write_to_csv(df_extensions_raw, df_extensions, others_str):
+    """
+    Function writes data for research question 4 to csv files
+    :param df_extensions_raw:
+    :param df_extensions:
+    :param others_str:
+    """
+    csv_file = 'research_question_4_artifacts_extensions.csv'
+    csv_q4_header = [['Research Question #4: Which file extensions are most frequently and least frequently archived?(.exe, .jar, everything, etc.)'],
+                     ['Note: '],
+                     ['When analyzing 200 Jenkinsfiles, there are many extension types which occur less than 3% of the time.'],
+                     ['Here is the list of those extensions: ' + others_str],
+                     ['To prevent these from overshadowing other prominent extension types, they were grouped into one extension labeled Other,'],
+                     ['and their occurrences were averaged. You will see this in the first table below. To see them ungrouped, look at the 2nd table below.'],
+                     ['Answer: ']]
+    csv_parsed_data_header = [['\n'], ['Jenkinsfile Parsed Data for Artifacts and Extensions']]
+    # Write RQ4 Header to CSV file
+    with open(csv_file, 'w+') as analysisFile:
+        cw = csv.writer(analysisFile, dialect='excel', lineterminator='\n')
+        cw.writerows(csv_q4_header)
+
+    # Write DataFrame to CSV file
+    df_extensions.to_csv(csv_file, mode='a', header='false', sep=',', na_rep='', index=False)
+
+    # Write Parsed Data Header to CSV file
+    with open(csv_file, 'a') as analysisFile:
+        cw = csv.writer(analysisFile, dialect='excel', lineterminator='\n')
+        cw.writerows(csv_parsed_data_header)
+
+    # Write DataFrame to CSV file
+    df_extensions_raw.to_csv(csv_file, mode='a', header='false', sep=',', na_rep='', index=False)
+    logger.info('Results written in /src folder to \'%s\' for \n\t\t\t\t\tResearch Question #4 Which file extensions are most frequently and least frequently archived?(.exe, '
+                '.jar, everything, etc.)', csv_file)
+
+
+def rq4_chart_data(df_extensions):
+    """
+    Function charts rq4 data to bar graph and pie chart
+    :param df_extensions:
+    """
+    # Bar chart RQ4: Number of Artifacts per Extension
+    ax = df_extensions.plot(kind='bar',
+                            title="RQ4: Number of Artifacts Archived Per Extension",
+                            x='Extension',
+                            y='NumArtifacts',
+                            rot=0,
+                            legend=False,
+                            fontsize=12)
+    ax.set_xlabel("Extension", fontsize=12)
+    ax.set_ylabel("Number of Archived Artifacts", fontsize=12)
+
+    # Annotate bar graph with values of each bar
+    x_offset = -0.10
+    y_offset = 0.8
+    for p in ax.patches:
+        b = p.get_bbox()
+        val = "{:.0f}".format(b.y1 + b.y0)
+        ax.annotate(val, ((b.x0 + b.x1) / 2 + x_offset, b.y1 + y_offset))
+    plt.show()
+
+    # Pie Chart Number and Percentage of Artifacts Archived per Extension
+    values = list(df_extensions['NumArtifacts'])
+    labels = list(df_extensions['Extension'])
+    plt.pie(values,
+            labels=values,
+            autopct='%.1f%%',
+            labeldistance=1.1,
+            counterclock=False)
+    plt.title('RQ4: Number and Percentage of Artifacts Archived Per Extension')
+    plt.legend(labels, loc="lower right", fontsize=9)
+    plt.show()
+
+
+def analyze_research_question_4_artifacts_extensions(df):
+    """
+    Function processes artifacts DataFrame for
+    Research Question #4: Which file extensions are most frequently and least frequently archived?(.exe, .jar, everything, etc.)
+    :param df:
+    """
+    # Research Question #4: Which file extensions are most frequently and least frequently archived?(.exe, .jar, everything, etc.)
+    df_extensions_raw = df.groupby(['Extension'])['Occurrence'].count().reset_index()
+    df_extensions_raw.columns = ['Extension', 'NumArtifacts']
+    df_extensions_raw.sort_values(by='NumArtifacts', inplace=True, ascending=False)
+    df_extensions_raw['Percentage'] = round(100 * df_extensions_raw['NumArtifacts'] / df_extensions_raw['NumArtifacts'].sum(), 1)
+    df_extensions = df_extensions_raw.copy(deep=True)
+
+    # Identify all extension types that occur less than 3% of the time
+    others_list = list(df_extensions.loc[df_extensions['Percentage'] < 3.0, 'Extension'])
+    others_str = ", ".join(others_list)
+    # Group these extensions with frequency < 3% together as 'Other', average(mean) their occurrences/frequency as 1 extension type ('Other') to properly highlight the more
+    # frequent extensions
+    df_extensions.loc[df_extensions['Percentage'] < 3.0, 'Extension'] = 'Other'
+    df_extensions = df_extensions.groupby('Extension')['NumArtifacts'].mean().astype(int).reset_index()
+    df_extensions['Percentage'] = round(100 * df_extensions['NumArtifacts'] / df_extensions['NumArtifacts'].sum(), 1)
+    df_extensions.sort_values(by='NumArtifacts', inplace=True, ascending=False)
+    logger.debug('\nRQ#4:\n%s', df_extensions_raw)
+    logger.debug('\nRQ#4:\n%s', df_extensions)
+    logger.debug('Other: extensions with frequency less than 3 percent of the time: %s', others_list)
+
+    rq4_write_to_csv(df_extensions_raw, df_extensions, others_str)
+    rq4_chart_data(df_extensions)
+
+
+def rq5_write_to_csv(df_fingerprint_raw, df_fingerprint_tf):
+    """
+    Function writes data for research question 5 to csv files
+    :param df_fingerprint_tf: dataframe with number and percentage of artifacts that have fingerprint set to true and false
+    :param df_fingerprint_raw:
+    """
+    csv_file = 'research_question_5_fingerprint_tf.csv'
+    csv_q5_header = [['Research Question #5: What percentage of archived artifacts are archived with a fingerprint?'],
+                     ['Answer: ']]
+    csv_parsed_data_header = [['\n'], ['Jenkinsfile Parsed Data for Artifacts and Fingerprints']]
+    # Write RQ5 Header to CSV file
+    with open(csv_file, 'w+') as analysisFile:
+        cw = csv.writer(analysisFile, dialect='excel', lineterminator='\n')
+        cw.writerows(csv_q5_header)
+
+    # Write DataFrame to CSV file
+    df_fingerprint_tf.to_csv(csv_file, mode='a', header='false', sep=',', na_rep='', index=False)
+
+    # Write Parsed Data Header to CSV file
+    with open(csv_file, 'a') as analysisFile:
+        cw = csv.writer(analysisFile, dialect='excel', lineterminator='\n')
+        cw.writerows(csv_parsed_data_header)
+
+    # Write DataFrame to CSV file
+    df_fingerprint_raw.to_csv(csv_file, mode='a', header='false', sep=',', na_rep='', index=False)
+    logger.info('Results written in /src folder to \'%s\' for \n\t\t\t\t\tResearch Question #5: What percentage of archived artifacts are archived with a fingerprint?', csv_file)
+
+
+def rq6_write_to_csv(df_fingerprint_raw, df_fingerprint_extension):
+    """
+    Function writes data for research question 6 to csv files
+    :param df_fingerprint_extension: dataframe with number and percentage of artifacts groupedby fingerprint and extension
+    :param df_fingerprint_raw:
+    """
+    csv_file = 'research_question_6_fingerprint_extension.csv'
+    csv_q6_header = [['Research Question #6: Which archived artifact file extensions are most frequently and least frequently fingerprinted?'],
+                     ['Answer: ']]
+    csv_parsed_data_header = [['\n'], ['Jenkinsfile Parsed Data for Artifacts, Fingerprints and Extensions']]
+    # Write RQ6 Header to CSV file
+    with open(csv_file, 'w+') as analysisFile:
+        cw = csv.writer(analysisFile, dialect='excel', lineterminator='\n')
+        cw.writerows(csv_q6_header)
+
+    # Write DataFrame to CSV file
+    df_fingerprint_extension.to_csv(csv_file, mode='a', header='false', sep=',', na_rep='', index=False)
+
+    # Write Parsed Data Header to CSV file
+    with open(csv_file, 'a') as analysisFile:
+        cw = csv.writer(analysisFile, dialect='excel', lineterminator='\n')
+        cw.writerows(csv_parsed_data_header)
+
+    # Write DataFrame to CSV file
+    df_fingerprint_raw.to_csv(csv_file, mode='a', header='false', sep=',', na_rep='', index=False)
+    logger.info('Results written in /src folder to \'%s\' for \n\t\t\t\t\tResearch Question #6: Which archived artifact file extensions are most frequently and least frequently '
+                'fingerprinted?', csv_file)
+
+
+def rq5_chart_data(df_fingerprint_tf):
+
+    """
+    Function charts rq5 data to bar graph and pie chart
+    :param df_fingerprint_tf:
+    """
+    # Bar chart RQ5: Number of Artifacts Archived Fingerprinted
+    ax = df_fingerprint_tf.plot(kind='bar',
+                                title="RQ5: Number of Artifacts Archived that are Fingerprinted",
+                                x='fingerprint',
+                                y='NumArtifacts',
+                                rot=0,
+                                legend=False,
+                                fontsize=12)
+    ax.set_xlabel("Extension", fontsize=12)
+    ax.set_ylabel("Number of Archived Artifacts", fontsize=12)
+
+    # Annotate bar graph with values of each bar
+    x_offset = -0.10
+    y_offset = 0.8
+    for p in ax.patches:
+        b = p.get_bbox()
+        val = "{:.0f}".format(b.y1 + b.y0)
+        ax.annotate(val, ((b.x0 + b.x1) / 2 + x_offset, b.y1 + y_offset))
+    plt.show()
+
+    # Pie Chart RQ5: Number and Percentage of Archived Artifacts Fingerprinted
+    values = list(df_fingerprint_tf['NumArtifacts'])
+    labels = list(df_fingerprint_tf['fingerprint'])
+    plt.pie(values,
+            labels=values,
+            shadow=False,
+            autopct='%.1f%%',
+            labeldistance=1.1)
+    plt.title('RQ5: Number and Percentage of Archived Artifacts that are Fingerprinted')
+    plt.legend(labels, loc=4)
+    plt.show()
+
+
+def rq6_chart_data(df_fingerprint_extension):
+
+    """
+    Function charts rq5 data to bar graph and pie chart
+    :param df_fingerprint_extension:
+    """
+    # Bar chart RQ6: Number of Artifacts Archived Fingerprinted Per Extension
+    ax = df_fingerprint_extension.plot(kind='bar',
+                                       title="RQ6: Number of Artifacts Archived Fingerprinted Per Extension",
+                                       x='Extension',
+                                       y='NumArtifacts',
+                                       rot=0,
+                                       legend=False,
+                                       fontsize=12)
+    ax.set_xlabel("Extension", fontsize=12)
+    ax.set_ylabel("Number of Archived Artifacts", fontsize=12)
+
+    # Annotate bar graph with values of each bar
+    x_offset = -0.10
+    y_offset = 0.8
+    for p in ax.patches:
+        b = p.get_bbox()
+        val = "{:.0f}".format(b.y1 + b.y0)
+        ax.annotate(val, ((b.x0 + b.x1) / 2 + x_offset, b.y1 + y_offset))
+    plt.show()
+
+    # Pie Chart RQ6: Number and Percentage of Archived Artifacts Fingerprinted Per Extension
+    values = list(df_fingerprint_extension['NumArtifacts'])
+    labels = list(df_fingerprint_extension['Extension'])
+    plt.pie(values,
+            labels=values,
+            counterclock=False,
+            autopct='%.1f%%',
+            pctdistance=.7,
+            labeldistance=1.1)
+    plt.title('RQ6: Number and Percent of Archived Artifacts Fingerprinted Per Extension')
+    plt.legend(labels, loc=3, fontsize=10)
+    plt.show()
+
+
+def analyze_research_question_56_artifacts_fingerprints(df):
+    """
+    Function processes artifacts DataFrame for
+    Research Question #5: What percentage of archived artifacts are archived with a fingerprint?
+    Research Question #6: Which archived artifact file extensions are most frequently and least frequently fingerprinted?
+    :param df:
+    """
+
+    # Research Question #5 and #6: What percentage of archived artifacts are archived with a fingerprint? Which archived artifact file extensions are most frequently and least
+    # frequently fingerprinted?
+    df_fingerprint_raw = df.drop(['Artifact', 'onlyIfSuccessful', 'ParentSection', 'SectionName'], axis=1)
+    logger.debug('\nRQ#56:\n%s', df_fingerprint_raw)
+
+    # Research Question #5 What percentage of archived artifacts are archived with a fingerprint? tf is for true/false
+    df_fingerprint_tf = df_fingerprint_raw.drop(['RepoNum', 'Username', 'RepositoryName', 'Extension'], axis=1)
+    df_fingerprint_tf = df_fingerprint_tf.groupby('fingerprint').size().reset_index()
+    df_fingerprint_tf.columns = ['fingerprint', 'NumArtifacts']
+    df_fingerprint_tf['Percentage'] = round(100 * df_fingerprint_tf['NumArtifacts'] / df_fingerprint_tf['NumArtifacts'].sum(), 1)
+    # logger.debug(df_fingerprint_tf.set_index('fingerprint').loc["false", "Percentage"])
+    logger.debug('\nRQ#5:\n%s', df_fingerprint_tf)
+
+    # Research Question #6: Which archived artifact file extensions are most frequently and least frequently fingerprinted?
+    df_fingerprint_extension = df_fingerprint_raw.drop(['RepoNum', 'Username', 'RepositoryName'], axis=1)
+    df_fingerprint_extension = df_fingerprint_extension.groupby(['fingerprint', 'Extension']).size().reset_index()
+    df_fingerprint_extension.columns = ['fingerprint', 'Extension', 'NumArtifacts']
+    df_fingerprint_extension.sort_values(['fingerprint', 'NumArtifacts'], ascending=[False, False], inplace=True)
+    df_fingerprint_extension.reset_index(inplace=True, drop=True)
+    df_fingerprint_extension = df_fingerprint_extension[df_fingerprint_extension['fingerprint'] == 'true']
+    df_fingerprint_extension['Percentage'] = round(100 * df_fingerprint_extension['NumArtifacts'] / df_fingerprint_extension['NumArtifacts'].sum(), 1)
+    # Filter out values that occur less than 2% of the time
+    df_fingerprint_extension = df_fingerprint_extension[df_fingerprint_extension['Percentage'] >= 2.0]
+    df_fingerprint_extension.reset_index(inplace=True, drop=True)
+    df_fingerprint_extension['Percentage'] = round(100 * df_fingerprint_extension['NumArtifacts'] / df_fingerprint_extension['NumArtifacts'].sum(), 1)
+    logger.debug('\nRQ#6:\n%s', df_fingerprint_extension)
+
+    rq5_write_to_csv(df_fingerprint_raw, df_fingerprint_tf)
+    rq6_write_to_csv(df_fingerprint_raw, df_fingerprint_extension)
+
+    rq5_chart_data(df_fingerprint_tf)
+    rq6_chart_data(df_fingerprint_extension)
+
+
 def analyze_research_questions_artifacts():
     """
     Function retrieves Jenkinsfiles, parses it, and analyzes the data to answer:
@@ -724,8 +1093,8 @@ def analyze_research_questions_artifacts():
 
     # Query for GitHub Jenkinsfile search ('pipeline' is used because our focus is on declarative pipeline syntax): TODO Change num_results as per your preference
     query = "filename:jenkinsfile q=pipeline archiveartifacts"
+    num_results = 200
 
-    num_results = 10
     repo_data = search_and_download_jenkinsfiles(query, num_results)
     logger.info('Results received from search: %s', repo_data)
 
@@ -777,88 +1146,16 @@ def analyze_research_questions_artifacts():
     avg_artifacts_per_repo = round((total_num_artifacts/repo_num), 2)
     logger.info('Average Number of Artifacts Per Repo: %s', avg_artifacts_per_repo)
 
-    # Research Question #3: In which pipeline sections or pipeline directives are artifacts most frequently and least frequently archived?
-    df_sections_summary = df.groupby('ParentSection')['Occurrence'].count().reset_index()
-    df_sections_summary.columns = ['Section', 'Count']
-    df_sections_summary['Percentage'] = round(100 * df_sections_summary['Count'] / df_sections_summary['Count'].sum(), 2)
-    logger.debug('\nRQ#3:\n%s', df_sections_summary)
-
-    # Bar chart Number of Artifacts Archived per Section
-    ax = df_sections_summary.plot(kind='bar',
-                                  title="Number of Artifacts Archived Per Section",
-                                  # grid=True,
-                                  # color='blue',
-                                  x='Section',
-                                  y='Count',
-                                  rot=0,
-                                  legend=True,
-                                  fontsize=12)
-    ax.set_xlabel("Section", fontsize=12)
-    ax.set_ylabel("Number of Artifacts", fontsize=12)
-
-    x_offset = -0.10
-    y_offset = 1.0
-    for p in ax.patches:
-        b = p.get_bbox()
-        val = "{:.0f}".format(b.y1 + b.y0)
-        ax.annotate(val, ((b.x0 + b.x1) / 2 + x_offset, b.y1 + y_offset))
-    plt.show()
-
-    # Pie Chart Number and Percentage of Artifacts Archived per Section
-    values = list(df_sections_summary.Count)
-    colors = ['b', 'g', 'r', 'c']
-    labels = list(df_sections_summary.Section)
-    ex = 0.00
-    explode = (ex, ex, ex, ex)
-    plt.pie(values,
-            labels=values,
-            #explode=explode,
-            shadow=False,
-            autopct='%.1f%%',
-            labeldistance=1.1)
-    plt.title('Number and Percentage of Artifacts Archived Per Section')
-    plt.legend(labels, loc=4)
-    plt.show()
-
-    # Research Question #4: Which file extensions are most frequently and least frequently archived?(.exe, .jar, everything, etc.)
-    # df_extensions_summary = df.groupby('Extension')['Occurrence'].count().reset_index()
-    # df_extensions_summary.columns = ['Extension', 'Count']
-    # df_extensions_summary.sort_values(by='Count', inplace=True)
-    # df_extensions_summary['Percentage'] = round(100 * df_extensions_summary['Count'] / df_extensions_summary['Count'].sum(), 2)
-    # print(df_extensions_summary)
-    # print(type(df_extensions_summary))
-    # print('\n')
-    # logger.debug('\nRQ#4:\n%s', df_extensions_summary)
-    # Research Question #5: What percentage of archived artifacts are archived with a fingerprint?
-    # Research Question #6: Which archived artifact file extensions are most frequently and least frequently fingerprinted?
-
-    csv_file = 'research_question_artifacts.csv'
-    csv_header = [['Research Question #3: In which pipeline sections or pipeline directives are artifacts most frequently and least frequently archived?'],
-                  ['Answer: '],
-                  ['\n'],
-                  ['Research Question #4: Which file extensions are most frequently and least frequently archived?(.exe, .jar, everything, etc.)'],
-                  ['Answer: '],
-                  ['\n'],
-                  ['Research Question #5: What percentage of archived artifacts are archived with a fingerprint?'],
-                  ['Answer: '],
-                  ['\n'],
-                  ['Research Question #6: Which archived artifact file extensions are most frequently and least frequently fingerprinted?'],
-                  ['Answer: '],
-                  ['\n'],
-                  ['Parsed Jenkinsfile Data']]
-
-    # Write to CSV file
-    with open(csv_file, 'w+') as analysisFile:
-        cw = csv.writer(analysisFile, dialect='excel', lineterminator='\n')
-        cw.writerows(csv_header)
-
+    csv_file = 'research_question_artifacts_raw_data.csv'
     # Write DataFrame to CSV file
-    df.to_csv(csv_file, mode='a', header='false', sep=',', na_rep='', index=False)
-    logger.info('Results written in /src folder to \'%s\' for \n\t\t\t\t\tResearch Questions #s 3,4,5,6 on Artifacts', csv_file)
+    df.to_csv(csv_file, header='false', sep=',', na_rep='', index=False)
+    logger.info('Raw parsed data on artifacts written in /src folder to \'%s\'', csv_file)
+
+    analyze_research_question_3_artifacts_sections(df)
+    analyze_research_question_4_artifacts_extensions(df)
+    analyze_research_question_56_artifacts_fingerprints(df)
 
     return csv_file
-
-
 
 
 def main():
@@ -870,10 +1167,10 @@ def main():
     # analyze_research_question_triggers_stages()
 
     # Research Question #2
-    analyze_research_question_tools()
+    # analyze_research_question_tools()
 
     # Research Questions #3, 4, 5, 6 on 'archiveArtifacts'
-    #analyze_research_questions_artifacts()
+    analyze_research_questions_artifacts()
 
 
 if __name__ == '__main__':
