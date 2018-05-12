@@ -1,7 +1,5 @@
 import pandas as pd
 import logging
-import unittest
-import os
 
 # Retrieve same logger as defined in project.py
 logger = logging.getLogger('project')
