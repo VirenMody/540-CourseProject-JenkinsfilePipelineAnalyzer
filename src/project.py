@@ -9,6 +9,7 @@ import re  # regex
 import numpy
 import csv
 import traceback
+from random import shuffle
 
 import unittest
 
@@ -490,14 +491,24 @@ def analyze_research_question_tools():
     values = list(df_sections_summary.Count)
     colors = ['b', 'g', 'r', 'c']
     labels = list(df_sections_summary.Section)
-    ex = 0.00
-    explode = (ex, ex, ex, ex)
+    ex = 0.3
+    explode = []
+    for i in range(0, len(values)):
+        if (values[i]/total_tools) < .1:
+            explode.append(ex)
+            # ex += .1
+        else:
+            explode.append(0)
+
+    explode_tuple = tuple(explode)
+
     plt.pie(values,
             labels=values,
-            # explode=explode,
+            explode=explode,
             shadow=False,
+            pctdistance= 1.1,
             autopct='%.1f%%',
-            labeldistance=1.1)
+            labeldistance=1.2)
     plt.title('Number and Percentage of Build Tools')
     plt.legend(labels, loc=4)
     plt.show()
@@ -801,7 +812,7 @@ def analyze_research_questions_artifacts():
     explode = (ex, ex, ex, ex)
     plt.pie(values,
             labels=values,
-            # explode=explode,
+            #explode=explode,
             shadow=False,
             autopct='%.1f%%',
             labeldistance=1.1)
@@ -862,7 +873,7 @@ def main():
     analyze_research_question_tools()
 
     # Research Questions #3, 4, 5, 6 on 'archiveArtifacts'
-    analyze_research_questions_artifacts()
+    #analyze_research_questions_artifacts()
 
 
 if __name__ == '__main__':
