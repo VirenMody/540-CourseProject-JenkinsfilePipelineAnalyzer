@@ -17,9 +17,9 @@ import project_utils
 # TODO Research Question - What is the correlation between the presence of disableconcurrentbuilds() and hashes in triggers? Why would a Jenkinsfile contain both?
 # TODO Research Question - Which notification methods are used most and least frequentyly (email, Slack, etc.)?
 
-# TODO PROFESSOR - Update the following to paths for your system
-# TODO PROFESSOR - Change the logger level to your preference
-# TODO PROFESSOR - Update the number of search results desired. Our recommendation is 200
+# TODO PROFESSOR - Update the CLONED_REPOS_DIR_PATH to paths for your system
+# TODO PROFESSOR - Change the LOGGER_LEVEL(INFO, DEBUG, WARNING, ERROR, etc.) to your preference
+# TODO PROFESSOR - Update the NUM_SEARCH_RESULTS_DESIRED to your preference. Our recommendation is 200 (see report for why).
 CLONED_REPOS_DIR_PATH = 'C:/Users/Viren/Google Drive/1.UIC/540/guillermo_rojas_hernandez_viren_mody_courseproject/ClonedRepos/'
 # CLONED_REPOS_DIR_PATH = '/home/guillermo/cs540/guillermo_rojas_hernandez_viren_mody_courseproject/ClonedRepos/'
 LOGGER_LEVEL = logging.DEBUG
@@ -77,6 +77,53 @@ def authenticate_github_object():
     logger.info('GITHUB_USERNAME: %s', GITHUB_USERNAME)
     logger.info('GITHUB_ACCESS_TOKEN: %s', GITHUB_ACCESS_TOKEN)
     logger.info('LOCAL_CLONED_REPO_PATH: %s', CLONED_REPOS_DIR_PATH)
+
+
+def search_and_download_jenkinsfiles(query, num_results):
+    """
+    Function searches GitHub for Jenkinsfiles with the given parameters and downloads them
+    :param query: search query for jenkinsfiles
+    :param num_results: number of results desired from search
+    :return: repo_data: a list of data for each repo: username, repo-name, and path to downloaded jenkinsfile
+    """
+
+    # Results are returned in tuples: ((github_object, raw_url))
+    logger.info('Searching GitHub for %s results with query: %s', num_results, query)
+    results = project_utils.search_by_code(git_hub, query, num_results)
+    logger.debug("Results from project.search_by_code: %s", results)
+    logger.info('Downloading repository results from GitHub Search')
+
+    # Increment research_topic_num for each research topic to separate jenkinsfiles that are downloaded
+    global research_topic_num
+    research_topic_num += 1
+    repo_data = []
+    # Get file contents of all results (raw url is second item in tuple: results[i][1])
+    for i in range(0, len(results)):
+        res = requests.get(results[i][1])
+
+        # print the whole folder name
+        logger.debug('Downloading Repository %s: %s', i+1, results[i][2])
+
+        # Print contents of Jenkinsfile
+        # logger.debug(res.text)
+
+        github_repo_name = results[i][2]
+        path_to_repo = CLONED_REPOS_DIR_PATH + str(research_topic_num) + '/' + github_repo_name
+        pathlib.Path(path_to_repo).mkdir(parents=True, exist_ok=True)
+
+        # Write file contents back to Jenkinsfile
+        jenkinsfile_path = path_to_repo + '/' + 'Jenkinsfile'
+        with open(jenkinsfile_path, "wb") as file:
+            file.write(res.content)
+
+        # Store GitHub username, repo name, and path to Jenkinsfile in a list to process
+        github_repo_name_split = github_repo_name.split('/')
+        username = github_repo_name_split[0]
+        repo_name = github_repo_name_split[1]
+        repo_dict = {'Username': username, 'RepoName': repo_name, 'Jenkinsfile_Path': jenkinsfile_path}
+        repo_data.append(repo_dict)
+
+    return repo_data
 
 
 def parse_triggers_and_stages(jenkinsfile):
@@ -148,118 +195,6 @@ def parse_triggers_and_stages(jenkinsfile):
     logger.debug('TRIGGERS: %s', triggers_data)
     logger.debug('STAGES: %s', stages_data)
     return triggers_data, stages_data, num_triggers, num_stages
-
-
-def parse_tools(jenkinsfile):
-    """
-    Function parses jenkinsfile for trigger and stage counts and info
-    :param jenkinsfile: path to Jenkinsfile to parse
-    :return: list of triggers, list of stages and number of triggers and stages
-    """
-    logger.debug('Parsing Jenkinsfile: %s', jenkinsfile)
-    tools_found = []
-    tool_type = ''
-    num_tools = 0
-    capture_tools = False
-
-    with open(jenkinsfile, errors='replace') as file:
-        logger.debug('Jenkinsfile Contents: %s', file)
-
-        try:
-            for line in file:
-                line = line.strip('\n')
-
-                if line[:2] == '//':
-                    continue
-                if "tools" in line:
-                    capture_tools = True
-                    continue
-                elif "}" in line and capture_tools is True:
-                    capture_tools = False
-                    break
-                elif capture_tools is True:
-
-                    # strip white space from beginning of line
-                    str = line.lstrip()
-                    # save the first part of the string before the space as a tool type
-                    tool_type = str.partition(' ')[0]
-
-                    if tool_type == '{' or tool_type == '//':
-                        continue
-                    else:
-                        num_tools += 1
-
-                        # Retrieve trigger value from between parentheses and single quotes
-                        re_tools_pattern = r"(?:\'|\")(.*)(?:\'|\")"
-                        tool_value = re.search(re_tools_pattern, line).group(1)
-
-                        # catch case of extra colon
-                        if tool_type == 'nodejs:':
-                            tool_type = 'nodejs'
-
-                        logger.debug('LINE: %s', line)
-                        logger.debug('ADDING TOOL:  %s = %s', tool_type, tool_value)
-                        tools_found.append({'ToolType': tool_type, 'ToolVersion': tool_value, 'Occurrence': num_tools})
-
-
-        # Catch AttributeErrors: Most commonly occurs when the above keywords are found in a context other than designed for (i.e. the word 'stage' is found in the comments)
-        except AttributeError as error:
-            logger.error('%s: Unique Pipeline Syntax--SKIPPING THIS JENKINSFILE', error)
-            return None, None
-        except Exception as exception:
-            logger.error('%s: SKIPPING THIS JENKINSFILE', exception)
-            return None, None
-
-    logger.debug('TOOLS FOUND: %s', tools_found)
-
-    return tools_found, num_tools
-
-
-def search_and_download_jenkinsfiles(query, num_results):
-    """
-    Function searches GitHub for Jenkinsfiles with the given parameters and downloads them
-    :param query: search query for jenkinsfiles
-    :param num_results: number of results desired from search
-    :return: repo_data: a list of data for each repo: username, repo-name, and path to downloaded jenkinsfile
-    """
-
-    # Results are returned in tuples: ((github_object, raw_url))
-    logger.info('Searching GitHub for %s results with query: %s', num_results, query)
-    results = project_utils.search_by_code(git_hub, query, num_results)
-    logger.debug("Results from project.search_by_code: %s", results)
-    logger.info('Downloading repository results from GitHub Search')
-
-    # Increment research_topic_num for each research topic to separate jenkinsfiles that are downloaded
-    global research_topic_num
-    research_topic_num += 1
-    repo_data = []
-    # Get file contents of all results (raw url is second item in tuple: results[i][1])
-    for i in range(0, len(results)):
-        res = requests.get(results[i][1])
-
-        # print the whole folder name
-        logger.debug('Downloading Repository %s: %s', i+1, results[i][2])
-
-        # Print contents of Jenkinsfile
-        # logger.debug(res.text)
-
-        github_repo_name = results[i][2]
-        path_to_repo = CLONED_REPOS_DIR_PATH + str(research_topic_num) + '/' + github_repo_name
-        pathlib.Path(path_to_repo).mkdir(parents=True, exist_ok=True)
-
-        # Write file contents back to Jenkinsfile
-        jenkinsfile_path = path_to_repo + '/' + 'Jenkinsfile'
-        with open(jenkinsfile_path, "wb") as file:
-            file.write(res.content)
-
-        # Store GitHub username, repo name, and path to Jenkinsfile in a list to process
-        github_repo_name_split = github_repo_name.split('/')
-        username = github_repo_name_split[0]
-        repo_name = github_repo_name_split[1]
-        repo_dict = {'Username': username, 'RepoName': repo_name, 'Jenkinsfile_Path': jenkinsfile_path}
-        repo_data.append(repo_dict)
-
-    return repo_data
 
 
 def analyze_research_question_triggers_stages():
@@ -361,6 +296,71 @@ def analyze_research_question_triggers_stages():
                 'in the pipeline?', csv_file)
 
     return csv_file
+
+
+def parse_tools(jenkinsfile):
+    """
+    Function parses jenkinsfile for trigger and stage counts and info
+    :param jenkinsfile: path to Jenkinsfile to parse
+    :return: list of triggers, list of stages and number of triggers and stages
+    """
+    logger.debug('Parsing Jenkinsfile: %s', jenkinsfile)
+    tools_found = []
+    tool_type = ''
+    num_tools = 0
+    capture_tools = False
+
+    with open(jenkinsfile, errors='replace') as file:
+        logger.debug('Jenkinsfile Contents: %s', file)
+
+        try:
+            for line in file:
+                line = line.strip('\n')
+
+                if line[:2] == '//':
+                    continue
+                if "tools" in line:
+                    capture_tools = True
+                    continue
+                elif "}" in line and capture_tools is True:
+                    capture_tools = False
+                    break
+                elif capture_tools is True:
+
+                    # strip white space from beginning of line
+                    str = line.lstrip()
+                    # save the first part of the string before the space as a tool type
+                    tool_type = str.partition(' ')[0]
+
+                    if tool_type == '{' or tool_type == '//':
+                        continue
+                    else:
+                        num_tools += 1
+
+                        # Retrieve trigger value from between parentheses and single quotes
+                        re_tools_pattern = r"(?:\'|\")(.*)(?:\'|\")"
+                        tool_value = re.search(re_tools_pattern, line).group(1)
+
+                        # catch case of extra colon
+                        if tool_type == 'nodejs:':
+                            tool_type = 'nodejs'
+
+                        logger.debug('LINE: %s', line)
+                        logger.debug('ADDING TOOL:  %s = %s', tool_type, tool_value)
+                        tools_found.append({'ToolType': tool_type, 'ToolVersion': tool_value, 'Occurrence': num_tools})
+
+
+        # Catch AttributeErrors: Most commonly occurs when the above keywords are found in a context other than designed for (i.e. the word 'stage' is found in the comments)
+        except AttributeError as error:
+            logger.error('%s: Unique Pipeline Syntax--SKIPPING THIS JENKINSFILE', error)
+            return None, None
+        except Exception as exception:
+            logger.error('%s: SKIPPING THIS JENKINSFILE', exception)
+            return None, None
+
+    logger.debug('TOOLS FOUND: %s', tools_found)
+
+    return tools_found, num_tools
 
 
 def analyze_research_question_tools():
@@ -529,160 +529,6 @@ def analyze_research_question_tools():
                 'in the pipeline?', csv_file)
 
     return csv_file
-
-
-def parse_archiveArtifacts(jenkinsfile):
-    """
-    Function parses jenkinsfile for 'archiveArtifacts' data: What artifacts are being archived, artifact file extensions, which sections artifacts are being archived,
-    fingerprint attribute, and onlyIfSuccessful
-    :param jenkinsfile: path to Jenkinsfile to parse
-    :return: num_artifacts: total number of artifacts parsed
-    :return: artifacts_data: list of all artifacts parsed and other data about them (i.e. artifact, extension, fingerprint bool, etc.)
-    """
-
-    logger.debug('Parsing Jenkinsfile: %s', jenkinsfile)
-
-    # List used as a stack to keep track of which section 'archiveArtifacts' is in
-    post_conditions = ['always', 'changed', 'fixed', 'regression', 'aborted', 'failure', 'success', 'unstable', 'cleanup']
-    section_stack = []
-    artifacts_data = []
-    num_artifacts = 0
-
-    # Parse the Jenkinsfile line by line searching for 'archiveArtifacts' keyword and relevant keywords (i.e fingerprint)
-    try:
-        with open(jenkinsfile, errors='replace') as file:
-            file_lines = file.readlines()
-            for idx, line in enumerate(file_lines):
-                line = line.strip()
-
-                # Skip lines that are comments
-                if line.startswith('//'):
-                    continue
-
-                # If there's an opening bracket, push section name onto the stack
-                if '{' in line:
-
-                    # For lines with both opening and closing brackets: if balanced, skip line, if imbalanced, skip Jenkinsfile for unparseable format
-                    if '}' in line:
-                        if line.count('{') == line.count('}'):
-                            continue
-                        else:
-                            logger.warning('WARNING: Unparseable format - SKIPPING THIS JENKINSFILE!')
-                            return None, None
-
-                    line = line.replace('{', '').replace(' ', '')
-                    # Skip the Jenkinsfile if formatting doesn't follow typical Jenkinsfile formats (open brackets on same line as section header i.e. stage('Build') { )
-                    if line == '':
-                        logger.warning('WARNING: Unparseable format - SKIPPING THIS JENKINSFILE!')
-                        return None, None
-
-                    section_stack.append(line)
-
-                # If there's a closing bracket, pop it off
-                if '}' in line:
-                    section_stack.pop()
-
-                # Extract all artifact data the line containing 'archiveArtifact' (i.e. artifact, extension, section, etc.)
-                if 'archiveArtifact' in line:
-                    num_artifacts += 1
-                    artifact = ''
-                    extension = ''
-                    fingerprint = 'false'
-                    onlyIfSuccessful = 'N/A'
-                    section = ''
-                    section_name = 'N/A'
-
-                    # Retrieve 'archivedArtifact' from between single or double quotes, then extract only name & extension without the path
-                    re_artifact_pattern = r"(?:'|\")(.*)(?:'|\")"
-                    logger.debug('LINE: %s', line)
-                    archived_artifact = re.search(re_artifact_pattern, line).group(1)
-                    artifact = pathlib.Path(archived_artifact).name
-                    logger.debug('EXTRACTED ARTIFACT: %s', artifact)
-
-                    # Extract artifact file extension and join them if there are multiple
-                    extension = ''.join(pathlib.Path(artifact).suffixes)
-                    # If there is no extension, it either indicates all files in a directory or the file has no extension at all
-                    if extension == '':
-                        if artifact.endswith('*'):
-                            extension = 'All'
-                        else:
-                            extension = 'None'
-                    logger.debug('EXTRACTED EXTENSION: %s', extension)
-
-                    # Extract fingerprint boolean (true, false) from line
-                    # re_fingerprint_pattern = r"fingerprint:\s(.*)"
-                    re_fingerprint_pattern = r"fingerprint\s*:\s*(true|false)"
-                    if 'fingerprint' in line:
-                        fingerprint = re.search(re_fingerprint_pattern, line).group(1)
-                    # If the fingerprint is not on the current line, check the following and previous lines to accommodate different formats
-                    else:
-                        # Update regex pattern to accommodate different formats
-                        re_fingerprint_pattern = r"(?:'|\")(.*)(?:'|\")"
-                        if idx + 1 < len(file_lines):
-                            next_line = file_lines[idx+1]
-                            if 'fingerprint' in next_line and 'archivedArtifact' not in next_line:
-                                fingerprint = re.search(re_fingerprint_pattern, file_lines[idx+1]).group(1)
-
-                        # If the fingerprint is not a boolean and is an artifact, set the boolean to true
-                        if fingerprint != 'true' and fingerprint != 'false':
-                            logger.debug('EXTRACTED NON-BOOLEAN FINGERPRINT ARTIFACT: %s', fingerprint)
-                            fingerprint = 'true'
-                    logger.debug('EXTRACTED FINGERPRINT: %s', fingerprint)
-
-                    # Extract onlyIfSuccessful boolean from line
-                    re_onlyIfSuccessful_pattern = r"onlyIfSuccessful:\s(true|false)"
-                    if 'onlyIfSuccessful' in line:
-                        onlyIfSuccessful = re.search(re_onlyIfSuccessful_pattern, line).group(1)
-                    logger.debug('EXTRACTED onlyIfSuccessful: %s', onlyIfSuccessful)
-
-                    # Extract the section the artifact is found in from the section_stack
-                    logger.debug('SECTION_STACK: %s', section_stack)
-                    for section in reversed(section_stack):
-                        logger.debug('Looking at section: %s', section)
-                        if 'stage' in section and 'stages' not in section:
-                            re_stages_pattern = r"(?:'|\")(.*)(?:'|\")"
-                            section_name = re.search(re_stages_pattern, section).group(1)
-                            section = 'stage'
-                            break
-                        elif any(section in condition for condition in post_conditions):
-                            section_name = section
-                            section = 'post-' + section
-                            break
-                        elif 'steps' not in section and 'Archive' not in section:
-                            logger.debug('FOUND NONSTAGE NONPOST SECTION: %s in %s', section, jenkinsfile)
-                    logger.debug('EXTRACTED SECTION-SECTION_NAME: %s-%s', section, section_name)
-
-                    artifacts_data.append({'Artifact': artifact,
-                                            'Extension': extension,
-                                            'fingerprint': fingerprint,
-                                            'onlyIfSuccessful': onlyIfSuccessful,
-                                            'ParentSection': section,
-                                            'SectionName': section_name,
-                                            'Occurrence': num_artifacts})
-
-            if section_stack:
-                logger.warning('WARNING: STACK IS NOT EMPTY - Jenkinsfile brackets are imbalanced - SKIPPING THIS JENKINSFILE!')
-                return None, None
-
-    # Catch:
-    # - IndexErrors: Most commonly occurs when there's an imbalance in opening and closing brackets in section_stack
-    # - AttributeErrors: Most commonly occurs when the above keywords are found in a context other than designed for (i.e. the word 'stage' is found in the comments)
-    except IndexError as error:
-        logger.error('ERROR: %s - Jenkinsfile brackets are imbalanced - SKIPPING THIS JENKINSFILE', error)
-        traceback.print_stack()
-        return None, None
-    except AttributeError as error:
-        logger.error('ERROR: %s - SKIPPING THIS JENKINSFILE', error)
-        traceback.print_stack()
-        return None, None
-    except Exception as exception:
-        logger.error('EXCEPTION: %s - SKIPPING THIS JENKINSFILE', exception)
-        traceback.print_stack()
-        return None, None
-
-    logger.debug('ARTIFACTS: %s', artifacts_data)
-    logger.debug('NUMBER OF ARTIFACTS: %s', num_artifacts)
-    return artifacts_data, num_artifacts
 
 
 def rq3_write_to_csv(df_sections_raw, df_sections):
@@ -1009,6 +855,160 @@ def rq6_chart_data(df_fingerprint_extension):
     plt.title('RQ6: Number and Percent of Archived Artifacts Fingerprinted Per Extension')
     plt.legend(labels, loc=3, fontsize=10)
     plt.show()
+
+
+def parse_archiveArtifacts(jenkinsfile):
+    """
+    Function parses jenkinsfile for 'archiveArtifacts' data: What artifacts are being archived, artifact file extensions, which sections artifacts are being archived,
+    fingerprint attribute, and onlyIfSuccessful
+    :param jenkinsfile: path to Jenkinsfile to parse
+    :return: num_artifacts: total number of artifacts parsed
+    :return: artifacts_data: list of all artifacts parsed and other data about them (i.e. artifact, extension, fingerprint bool, etc.)
+    """
+
+    logger.debug('Parsing Jenkinsfile: %s', jenkinsfile)
+
+    # List used as a stack to keep track of which section 'archiveArtifacts' is in
+    post_conditions = ['always', 'changed', 'fixed', 'regression', 'aborted', 'failure', 'success', 'unstable', 'cleanup']
+    section_stack = []
+    artifacts_data = []
+    num_artifacts = 0
+
+    # Parse the Jenkinsfile line by line searching for 'archiveArtifacts' keyword and relevant keywords (i.e fingerprint)
+    try:
+        with open(jenkinsfile, errors='replace') as file:
+            file_lines = file.readlines()
+            for idx, line in enumerate(file_lines):
+                line = line.strip()
+
+                # Skip lines that are comments
+                if line.startswith('//'):
+                    continue
+
+                # If there's an opening bracket, push section name onto the stack
+                if '{' in line:
+
+                    # For lines with both opening and closing brackets: if balanced, skip line, if imbalanced, skip Jenkinsfile for unparseable format
+                    if '}' in line:
+                        if line.count('{') == line.count('}'):
+                            continue
+                        else:
+                            logger.warning('WARNING: Unparseable format - SKIPPING THIS JENKINSFILE!')
+                            return None, None
+
+                    line = line.replace('{', '').replace(' ', '')
+                    # Skip the Jenkinsfile if formatting doesn't follow typical Jenkinsfile formats (open brackets on same line as section header i.e. stage('Build') { )
+                    if line == '':
+                        logger.warning('WARNING: Unparseable format - SKIPPING THIS JENKINSFILE!')
+                        return None, None
+
+                    section_stack.append(line)
+
+                # If there's a closing bracket, pop it off
+                if '}' in line:
+                    section_stack.pop()
+
+                # Extract all artifact data the line containing 'archiveArtifact' (i.e. artifact, extension, section, etc.)
+                if 'archiveArtifact' in line:
+                    num_artifacts += 1
+                    artifact = ''
+                    extension = ''
+                    fingerprint = 'false'
+                    onlyIfSuccessful = 'N/A'
+                    section = ''
+                    section_name = 'N/A'
+
+                    # Retrieve 'archivedArtifact' from between single or double quotes, then extract only name & extension without the path
+                    re_artifact_pattern = r"(?:'|\")(.*)(?:'|\")"
+                    logger.debug('LINE: %s', line)
+                    archived_artifact = re.search(re_artifact_pattern, line).group(1)
+                    artifact = pathlib.Path(archived_artifact).name
+                    logger.debug('EXTRACTED ARTIFACT: %s', artifact)
+
+                    # Extract artifact file extension and join them if there are multiple
+                    extension = ''.join(pathlib.Path(artifact).suffixes)
+                    # If there is no extension, it either indicates all files in a directory or the file has no extension at all
+                    if extension == '':
+                        if artifact.endswith('*'):
+                            extension = 'All'
+                        else:
+                            extension = 'None'
+                    logger.debug('EXTRACTED EXTENSION: %s', extension)
+
+                    # Extract fingerprint boolean (true, false) from line
+                    # re_fingerprint_pattern = r"fingerprint:\s(.*)"
+                    re_fingerprint_pattern = r"fingerprint\s*:\s*(true|false)"
+                    if 'fingerprint' in line:
+                        fingerprint = re.search(re_fingerprint_pattern, line).group(1)
+                    # If the fingerprint is not on the current line, check the following and previous lines to accommodate different formats
+                    else:
+                        # Update regex pattern to accommodate different formats
+                        re_fingerprint_pattern = r"(?:'|\")(.*)(?:'|\")"
+                        if idx + 1 < len(file_lines):
+                            next_line = file_lines[idx+1]
+                            if 'fingerprint' in next_line and 'archivedArtifact' not in next_line:
+                                fingerprint = re.search(re_fingerprint_pattern, file_lines[idx+1]).group(1)
+
+                        # If the fingerprint is not a boolean and is an artifact, set the boolean to true
+                        if fingerprint != 'true' and fingerprint != 'false':
+                            logger.debug('EXTRACTED NON-BOOLEAN FINGERPRINT ARTIFACT: %s', fingerprint)
+                            fingerprint = 'true'
+                    logger.debug('EXTRACTED FINGERPRINT: %s', fingerprint)
+
+                    # Extract onlyIfSuccessful boolean from line
+                    re_onlyIfSuccessful_pattern = r"onlyIfSuccessful:\s(true|false)"
+                    if 'onlyIfSuccessful' in line:
+                        onlyIfSuccessful = re.search(re_onlyIfSuccessful_pattern, line).group(1)
+                    logger.debug('EXTRACTED onlyIfSuccessful: %s', onlyIfSuccessful)
+
+                    # Extract the section the artifact is found in from the section_stack
+                    logger.debug('SECTION_STACK: %s', section_stack)
+                    for section in reversed(section_stack):
+                        logger.debug('Looking at section: %s', section)
+                        if 'stage' in section and 'stages' not in section:
+                            re_stages_pattern = r"(?:'|\")(.*)(?:'|\")"
+                            section_name = re.search(re_stages_pattern, section).group(1)
+                            section = 'stage'
+                            break
+                        elif any(section in condition for condition in post_conditions):
+                            section_name = section
+                            section = 'post-' + section
+                            break
+                        elif 'steps' not in section and 'Archive' not in section:
+                            logger.debug('FOUND NONSTAGE NONPOST SECTION: %s in %s', section, jenkinsfile)
+                    logger.debug('EXTRACTED SECTION-SECTION_NAME: %s-%s', section, section_name)
+
+                    artifacts_data.append({'Artifact': artifact,
+                                            'Extension': extension,
+                                            'fingerprint': fingerprint,
+                                            'onlyIfSuccessful': onlyIfSuccessful,
+                                            'ParentSection': section,
+                                            'SectionName': section_name,
+                                            'Occurrence': num_artifacts})
+
+            if section_stack:
+                logger.warning('WARNING: STACK IS NOT EMPTY - Jenkinsfile brackets are imbalanced - SKIPPING THIS JENKINSFILE!')
+                return None, None
+
+    # Catch:
+    # - IndexErrors: Most commonly occurs when there's an imbalance in opening and closing brackets in section_stack
+    # - AttributeErrors: Most commonly occurs when the above keywords are found in a context other than designed for (i.e. the word 'stage' is found in the comments)
+    except IndexError as error:
+        logger.error('ERROR: %s - Jenkinsfile brackets are imbalanced - SKIPPING THIS JENKINSFILE', error)
+        traceback.print_stack()
+        return None, None
+    except AttributeError as error:
+        logger.error('ERROR: %s - SKIPPING THIS JENKINSFILE', error)
+        traceback.print_stack()
+        return None, None
+    except Exception as exception:
+        logger.error('EXCEPTION: %s - SKIPPING THIS JENKINSFILE', exception)
+        traceback.print_stack()
+        return None, None
+
+    logger.debug('ARTIFACTS: %s', artifacts_data)
+    logger.debug('NUMBER OF ARTIFACTS: %s', num_artifacts)
+    return artifacts_data, num_artifacts
 
 
 def analyze_research_question_56_artifacts_fingerprints(df):
