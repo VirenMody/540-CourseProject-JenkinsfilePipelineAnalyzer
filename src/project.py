@@ -1145,10 +1145,14 @@ def main():
     # Research Question #1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?
     analyze_research_question_triggers_stages()
 
-    # Research Question #2
+    # Research Question #2: What types of tools are used in the declarative Jenkins pipeline?
     analyze_research_question_tools()
 
     # Research Questions #3, 4, 5, 6 on 'archiveArtifacts'
+    # Research Question #3: In which pipeline sections/directives are artifacts most and least frequently archived?
+    # Research Question #4: Which artifact file extensions are most frequently and least frequently archived?(.exe, .jar, everything, etc.)
+    # Research Question #5: What percentage of archived artifacts are archived with a fingerprint?
+    # Research Question #6: Which archived artifact extensions are most and least frequently fingerprinted?
     analyze_research_questions_artifacts()
 
 
