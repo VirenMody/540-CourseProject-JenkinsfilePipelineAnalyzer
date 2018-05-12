@@ -372,11 +372,10 @@ def analyze_research_question_triggers_stages():
     return csv_file
 
 
-# TODO Function documentation comments
 def analyze_research_question_tools():
     """
-
-    :return:
+    Function retrieves Jenkinsfiles, parses it, and analyzes the data to answer:
+    Research Question #2: Which tools are most frequently and least frequently used in the pipeline?
     """
     logger.info('Analyzing Jenkinsfiles for Research Question 2: What types of tools are used in the pipeline?')
 
