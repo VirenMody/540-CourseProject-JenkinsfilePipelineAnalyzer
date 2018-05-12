@@ -285,7 +285,7 @@ def analyze_research_question_triggers_stages():
 
     # Query for GitHub Jenkinsfile search ('pipeline' is used because our focus is on declarative pipeline syntax): TODO Change num_results as per your preference
     query = "filename:jenkinsfile q=pipeline triggers stage tools"
-    num_results = 10
+    num_results = 200
     repo_data = search_and_download_jenkinsfiles(query, num_results)
     logger.info('Results received from search: %s', repo_data)
 
@@ -370,6 +370,7 @@ def analyze_research_question_triggers_stages():
                 'in the pipeline?', csv_file)
 
     return csv_file
+
 
 # TODO Function documentation comments
 def analyze_research_question_tools():
@@ -514,8 +515,7 @@ def analyze_research_question_tools():
     plt.legend(labels, loc=4)
     plt.show()
 
-
-    csv_file = 'research_question_tools.csv'
+    csv_file = 'research_question_2_tools.csv'
     csv_header = [['Research Question 1: What types of tools are used in the pipeline?'],
                   ['Repositories with Jenkinsfiles downloaded from GitHub: ' + str(num_results)],
                   ['Number of Jenkinsfiles suitable for parsing: ' + str(repo_num)],
@@ -1164,10 +1164,10 @@ def main():
     authenticate_github_object()
 
     # Research Question #1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?
-    # analyze_research_question_triggers_stages()
+    analyze_research_question_triggers_stages()
 
     # Research Question #2
-    # analyze_research_question_tools()
+    analyze_research_question_tools()
 
     # Research Questions #3, 4, 5, 6 on 'archiveArtifacts'
     analyze_research_questions_artifacts()
