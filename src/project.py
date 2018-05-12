@@ -15,15 +15,16 @@ import unittest
 
 import project_utils
 
-# TODO What is the correlation between the presence of disableconcurrentbuilds() and hashes in triggers?
-# TODO Research question involving notification systems (email, Slack, etc.)
-
+# TODO Research Question - What is the correlation between the presence of disableconcurrentbuilds() and hashes in triggers?
+# TODO Research question - Which notification methods are used most and least frequentyly (email, Slack, etc.)?
 
 # TODO PROFESSOR - Update the following to paths for your system
 # TODO PROFESSOR - Change the logger level to your preference
+# TODO PROFESSOR - Update the number of search results desired. Our recommendation is 200
 CLONED_REPOS_DIR_PATH = 'C:/Users/Viren/Google Drive/1.UIC/540/guillermo_rojas_hernandez_viren_mody_courseproject/ClonedRepos/'
 # CLONED_REPOS_DIR_PATH = '/home/guillermo/cs540/guillermo_rojas_hernandez_viren_mody_courseproject/ClonedRepos/'
 LOGGER_LEVEL = logging.DEBUG
+NUM_SEARCH_RESULTS_DESIRED = 200
 
 # Research Topic Number - Will be appended to the directory path to separate Jenkinsfiles by research topic
 research_topic_num = 0
@@ -79,8 +80,6 @@ def authenticate_github_object():
     logger.info('LOCAL_CLONED_REPO_PATH: %s', CLONED_REPOS_DIR_PATH)
 
 
-# TODO Error/exception handling (i.e. empty Jenkinsfile, empty triggers or stages)
-# TODO Only include declarative pipelines?
 def parse_triggers_and_stages(jenkinsfile):
     """
     Function parses jenkinsfile for trigger and stage counts and info
@@ -141,7 +140,7 @@ def parse_triggers_and_stages(jenkinsfile):
 
     # Catch AttributeErrors: Most commonly occurs when the above keywords are found in a context other than designed for (i.e. the word 'stage' is found in the comments)
     except AttributeError as error:
-        logger.error('%s: SKIPPING THIS JENKINSFILE', error)
+        logger.warning('%s: SKIPPING THIS JENKINSFILE', error)
         return None, None, None, None
     except Exception as exception:
         logger.error('%s: SKIPPING THIS JENKINSFILE', exception)
@@ -276,9 +275,9 @@ def analyze_research_question_triggers_stages():
     df_headers = ['RepoNum', 'Username', 'RepositoryName', 'TriggerType', 'TriggerValue', 'TriggerOccurrence', 'StageName', 'StageOccurrence']
     df = project_utils.create_df(df_headers)
 
-    # Query for GitHub Jenkinsfile search ('pipeline' is used because our focus is on declarative pipeline syntax): TODO Change num_results as per your preference
+    # Query for GitHub Jenkinsfile search ('pipeline' is used because our focus is on declarative pipeline syntax):
     query = "filename:jenkinsfile q=pipeline triggers stage tools"
-    num_results = 200
+    num_results = NUM_SEARCH_RESULTS_DESIRED
     repo_data = search_and_download_jenkinsfiles(query, num_results)
     logger.info('Results received from search: %s', repo_data)
 
@@ -379,7 +378,7 @@ def analyze_research_question_tools():
     # Create Query and Search GitHub (pipeline is used because our focus is on declarative pipeline syntax)
     # 'tools' is included in query to search for files that have the key word tools
     query = "filename:jenkinsfile q=pipeline tools"
-    num_results = 200
+    num_results = NUM_SEARCH_RESULTS_DESIRED
     repo_data = search_and_download_jenkinsfiles(query, num_results)
     logger.info('Results received from search: %s', repo_data)
     logger.info('Number of Results received from search: %s', len(repo_data))
@@ -538,7 +537,8 @@ def parse_archiveArtifacts(jenkinsfile):
     Function parses jenkinsfile for 'archiveArtifacts' data: What artifacts are being archived, artifact file extensions, which sections artifacts are being archived,
     fingerprint attribute, and onlyIfSuccessful
     :param jenkinsfile: path to Jenkinsfile to parse
-    :return: TODO determine return type
+    :return: num_artifacts: total number of artifacts parsed
+    :return: artifacts_data: list of all artifacts parsed and other data about them (i.e. artifact, extension, fingerprint bool, etc.)
     """
 
     logger.debug('Parsing Jenkinsfile: %s', jenkinsfile)
@@ -559,12 +559,6 @@ def parse_archiveArtifacts(jenkinsfile):
                 # Skip lines that are comments
                 if line.startswith('//'):
                     continue
-
-                # TODO Keep or remove files containing 'node'?
-                # # Skip Jenkinsfiles that contain 'node' - a possible indicator for scripted pipelines
-                # if 'node' in line:
-                #     logger.warning('WARNING: Detected possible scripted pipeline - SKIPPING THIS JENKINSFILE!')
-                #     return None, None
 
                 # If there's an opening bracket, push section name onto the stack
                 if '{' in line:
@@ -629,12 +623,6 @@ def parse_archiveArtifacts(jenkinsfile):
                             next_line = file_lines[idx+1]
                             if 'fingerprint' in next_line and 'archivedArtifact' not in next_line:
                                 fingerprint = re.search(re_fingerprint_pattern, file_lines[idx+1]).group(1)
-
-                        # TODO Remove fingerprint check in previous line?
-                        # if fingerprint == '' and idx - 1 >= 0:
-                        #     prev_line = file_lines[idx-1]
-                        #     if 'fingerprint' in prev_line and 'archivedArtifact' not in prev_line:
-                        #         fingerprint = re.search(re_fingerprint_pattern, file_lines[idx-1]).group(1)
 
                         # If the fingerprint is not a boolean and is an artifact, set the boolean to true
                         if fingerprint != 'true' and fingerprint != 'false':
@@ -1083,9 +1071,9 @@ def analyze_research_questions_artifacts():
     df_headers = ['RepoNum', 'Username', 'RepositoryName', 'Artifact', 'Extension', 'fingerprint', 'onlyIfSuccessful', 'ParentSection', 'SectionName', 'Occurrence']
     df = project_utils.create_df(df_headers)
 
-    # Query for GitHub Jenkinsfile search ('pipeline' is used because our focus is on declarative pipeline syntax): TODO Change num_results as per your preference
+    # Query for GitHub Jenkinsfile search ('pipeline' is used because our focus is on declarative pipeline syntax):
     query = "filename:jenkinsfile q=pipeline archiveartifacts"
-    num_results = 200
+    num_results = NUM_SEARCH_RESULTS_DESIRED
 
     repo_data = search_and_download_jenkinsfiles(query, num_results)
     logger.info('Results received from search: %s', repo_data)
