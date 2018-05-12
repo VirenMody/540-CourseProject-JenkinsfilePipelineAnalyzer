@@ -9,14 +9,13 @@ import re  # regex
 import numpy
 import csv
 import traceback
-from random import shuffle
-
-import unittest
 
 import project_utils
 
-# TODO Research Question - What is the correlation between the presence of disableconcurrentbuilds() and hashes in triggers?
-# TODO Research question - Which notification methods are used most and least frequentyly (email, Slack, etc.)?
+# TODO Research Question - When archiving artifacts, how often is post-success used vs. 'onlyIfSuccessful: true'? Why use one over the other?
+# TODO Research Question - Trigger patterns for cron and pollSCM: Most and least frequented? Hash vs no Hash?
+# TODO Research Question - What is the correlation between the presence of disableconcurrentbuilds() and hashes in triggers? Why would a Jenkinsfile contain both?
+# TODO Research Question - Which notification methods are used most and least frequentyly (email, Slack, etc.)?
 
 # TODO PROFESSOR - Update the following to paths for your system
 # TODO PROFESSOR - Change the logger level to your preference
