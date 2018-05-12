@@ -1125,7 +1125,7 @@ def analyze_research_questions_artifacts():
     avg_artifacts_per_repo = round((total_num_artifacts/repo_num), 2)
     logger.info('Average Number of Artifacts Per Repo: %s', avg_artifacts_per_repo)
 
-    csv_file = 'research_question_artifacts_raw_data.csv'
+    csv_file = 'research_question_3456_artifacts_raw_data.csv'
     # Write DataFrame to CSV file
     df.to_csv(csv_file, header='false', sep=',', na_rep='', index=False)
     logger.info('Raw parsed data on artifacts written in /src folder to \'%s\'', csv_file)

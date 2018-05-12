@@ -1,0 +1,695 @@
+Research Question 1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?
+Correlation Coefficient: 0.13571
+"
+"
+Parsed Jenkinsfile Data
+RepoNum,Username,RepositoryName,TriggerType,TriggerValue,TriggerOccurrence,StageName,StageOccurrence
+1,fxjordan,junit5-mockito-extension,,,,Build,1
+,,,,,,Deploy,2
+,,,,,,,
+2,fxjordan,rest-job-service,,,,Build,1
+,,,,,,Deploy,2
+,,,,,,,
+3,dwalldorf,timetrack,pollSCM,* * * * *,1,Test,1
+,,,,,,Build,2
+,,,,,,,
+4,fxjordan,spring-hateoas-hal-support,,,,Build,1
+,,,,,,Deploy,2
+,,,,,,,
+5,fxjordan,spring-utils,,,,Build,1
+,,,,,,Deploy,2
+,,,,,,,
+6,jenkins-infra,deprecated-usage-in-plugins,cron,H H * * *,1,Checkout,1
+,,,,,,Build,2
+,,,,,,Archive,3
+,,,,,,,
+7,tsamaya,react-and-spring,pollSCM,* * * * 1-5,1,Webpack Build,1
+,,,,,,Gradle Build,2
+,,,,,,,
+8,chinkurgp,maven-project1,pollSCM,* * * * *,1,Build,1
+,,,,,,Deployments,2
+,,,,,,Deploy to Staging,3
+,,,,,,Deploy to Production,4
+,,,,,,,
+9,moalmeida,example-javascript-api,pollSCM,* * * * *,1,Checkout,1
+,,,,,,Dependencies,2
+,,,,,,Code Scan,3
+,,,,,,Unit Test,4
+,,,,,,Integration Test,5
+,,,,,,Build,6
+,,,,,,Publish,7
+,,,,,,Deploy,8
+,,,,,,,
+10,jed-frey,matlab_junit_xml,cron,0 0 * * *,1,Checkout SCM,1
+,,,pollSCM,*/5 * * * *,2,Run Examples,2
+,,,,,,Package Toolbox,3
+,,,,,,,
+11,monkeylittle,java.spring-jpa-inheritance,pollSCM,*/1 * * * *,1,Code Commit,1
+,,,,,,Build,2
+,,,,,,Test,3
+,,,,,,Acceptance Test,4
+,,,,,,Performance Test,5
+,,,,,,Stability Test,6
+,,,,,,Exploratory Test,7
+,,,,,,Production,8
+,,,,,,,
+12,krasowskir,meinTest,pollSCM,* * * * *,1,Checkout,1
+,,,,,,Compile,2
+,,,,,,Unit test,3
+,,,,,,Final steps,4
+,,,,,,,
+13,abosma,webshop-soap,pollSCM,H/3 * * * *,1,Initialize,1
+,,,,,,Build,2
+,,,,,,Test,3
+,,,,,,Report,4
+,,,,,,,
+14,idylnlp,idylnlp-stanford-core-nlp,pollSCM,H/10 * * * *,1,Initialize,1
+,,,,,,Build,2
+,,,,,,,
+15,idylnlp,idylnlp-nifi,pollSCM,H/10 * * * *,1,Initialize,1
+,,,,,,Build,2
+,,,,,,,
+16,buildit,jenkins-pipeline-libraries,pollSCM,* * * * *,1,Build,1
+,,,,,,Test,2
+,,,,,,,
+17,idylnlp,idylnlp-model-zoo,pollSCM,H/10 * * * *,1,Initialize,1
+,,,,,,Build,2
+,,,,,,,
+18,idylnlp,idylnlp-samples,pollSCM,H/10 * * * *,1,Initialize,1
+,,,,,,Build,2
+,,,,,,,
+19,oksanasemeshkina,Tomcat,pollSCM,*/5 * * * *,1,Build,1
+,,,,,,Test,2
+,,,,,,Deploy,3
+,,,,,,,
+20,kunimido,eztrade-forex-service,upstream,/eztrade/eztrade-service-common/${env.BRANCH_NAME},1,Maven build,1
+,,,,,,,
+21,sogis,gretl,pollSCM,H/15 * * * *,1,Preparation,1
+,,,,,,Build,2
+,,,,,,,
+22,hellgate75,jenkins-pipeline-libraries,pollSCM,* * * * *,1,Build,1
+,,,,,,Test,2
+,,,,,,,
+23,ekstep,generator-ekstep-content-plugin,pollSCM,H/5 * * * *,1,Build,1
+,,,,,,,
+24,idylnlp,idylnlp-dl4j,pollSCM,H/10 * * * *,1,Initialize,1
+,,,,,,Build,2
+,,,,,,,
+25,ekstep,ekstep-content-plugin-dev-common,pollSCM,H/5 * * * *,1,Build,1
+,,,,,,,
+26,kunimido,eztrade-forex-model,upstream,/eztrade/eztrade-model/${env.BRANCH_NAME},1,Maven build,1
+,,,,,,,
+27,kunimido,eztrade-fix-connector,upstream,/eztrade/eztrade-parent/${env.BRANCH_NAME},1,Maven build,1
+,,,,,,,
+28,idylnlp,idylnlp,pollSCM,H/10 * * * *,1,Initialize,1
+,,,,,,Build,2
+,,,,,,,
+29,kunimido,eztrade-model,upstream,/eztrade/eztrade-parent/${env.BRANCH_NAME},1,Maven build,1
+,,,,,,,
+30,subeeshr,autopipeline,pollSCM,* * * * *,1,Build,1
+,,,,,,Deployments,2
+,,,,,,Deploy to Staging,3
+,,,,,,Deploy to Production,4
+,,,,,,,
+31,jpriolo,maven-project-0.4-Jenkinsfile,pollSCM,* * * * *,1,Build,1
+,,,,,,Deployments,2
+,,,,,,Deploy to Staging,3
+,,,,,,Deploy to Production,4
+,,,,,,,
+32,kunimido,eztrade-equities-service,upstream,/eztrade/eztrade-service-common/${env.BRANCH_NAME},1,Maven build,1
+,,,,,,,
+33,GateNLP,gateplugin-Tagger_TextRazor,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+34,npadula,jenkinsTest,pollSCM,*/5 * * * *,1,Clean Workspace,1
+,,,,,,Fetch,2
+,,,,,,NPM Restore,3
+,,,,,,Build,4
+,,,,,,Run Tests,5
+,,,,,,Deploy Site,6
+,,,,,,Configure,7
+,,,,,,,
+35,dwalldorf,track-my-time,pollSCM,* * * * *,1,Test,1
+,,,,,,Build,2
+,,,,,,Artifacts,3
+,,,,,,,
+36,de-jcup,eclipse-jenkins-editor,cron,H */4 * * 1-5,1,Example,1
+,,,,,,Example Deploy1,2
+,,,,,,Example Deploy2,3
+,,,,,,Example Deploy3,4
+,,,,,,Parallel Stage,5
+,,,,,,Branch A,6
+,,,,,,Branch B,7
+,,,,,,Build,8
+,,,,,,Test on Linux,9
+,,,,,,Test on Windows,10
+,,,,,,Test,11
+,,,,,,Deploy,12
+,,,,,,,
+37,CURJENKINS,codigo-tuberia3,pollSCM,* * * * *,1,Build,1
+,,,,,,Paso a pre,2
+,,,,,,Deploy to Staging,3
+,,,,,,Paso a pro,4
+,,,,,,,
+38,dwalldorf,track-my-fuel,pollSCM,* * * * *,1,Test,1
+,,,,,,Build,2
+,,,,,,Artifacts,3
+,,,,,,,
+39,mapaction,mapaction-toolbox,,,,Build,1
+,,,,,,Test,2
+,,,,,,Deploy,3
+,,,,,,,
+40,mjrousos,BreakfastQuest,pollSCM,H/2 * * * *,1,Stamp Version,1
+,,,,,,Build,2
+,,,,,,Build Docker Images,3
+,,,,,,Test,4
+,,,,,,Publish Images,5
+,,,,,,Deploy,6
+,,,,,,,
+41,dwalldorf,jadecR,pollSCM,* * * * *,1,Test,1
+,,,,,,Build,2
+,,,,,,Artifacts,3
+,,,,,,Publish Artifact,4
+,,,,,,,
+42,GateNLP,gateplugin-Twitter,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+43,dschadow,ApplicationIntrusionDetection,pollSCM,@daily,1,Checkout,1
+,,,,,,Version,2
+,,,,,,Build,3
+,,,,,,Sonar,4
+,,,,,,Archive,5
+,,,,,,,
+44,GateNLP,gateplugin-Copy_Annots_Between_Docs,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+45,DBCDK,common-records,pollSCM,H/03 * * * *,1,Clear workspace,1
+,,,,,,Maven build,2
+,,,,,,Publish pmd results,3
+,,,,,,Maven deploy,4
+,,,,,,,
+46,GateNLP,gateplugin-Groovy,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+47,GateNLP,gateplugin-CISTEM,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+48,narasimhavuppala,jenkins-calculator,cron,H */4 * * 1-5,1,checkout,1
+,,,,,,checkout stage,2
+,,,,,,Build,3
+,,,,,,Build stage,4
+,,,,,,Aprove,5
+,,,,,,publish Junit,6
+,,,,,,Unit stage,7
+,,,,,,parallel,8
+,,,,,,coverage,9
+,,,,,,coverage stage,10
+,,,,,,pmd,11
+,,,,,,pmd stage,12
+,,,,,,,
+49,DBCDK,hydra,pollSCM,H/03 * * * *,1,clear workspace,1
+,,,,,,verify,2
+,,,,,,publish pmd results,3
+,,,,,,docker build,4
+,,,,,,,
+50,GateNLP,gateplugin-Annotation_Merging,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+51,GateNLP,gateplugin-Lang_Welsh,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+52,PotOfTea,osrm_map,cron,H 16 * * 0,1,build and unit-test,1
+,,,,,,Publish image,2
+,,,,,,Deploy Test,3
+,,,,,,Smoke tests,4
+,,,,,,Deploy to UAT,5
+,,,,,,Run end-to-end tests,6
+,,,,,,Promote Image to prod-ready,7
+,,,,,,Wait for approval,8
+,,,,,,Deploy to prod,9
+,,,,,,Promote Image to prod-deployed,10
+,,,,,,,
+53,macg33zr,hello,pollSCM,*/5 * * * *,1,Checkout,1
+,,,,,,build,2
+,,,,,,,
+54,GateNLP,gateplugin-Schema_Annotation_Editor,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+55,vynaidu,SpringHibernateMaven,pollSCM,* * * * *,1,Build,1
+,,,,,,Deployments,2
+,,,,,,Deploy to Staging,3
+,,,,,,Deploy to Production,4
+,,,,,,,
+56,GateNLP,gateplugin-Lang_Russian,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+57,GateNLP,gateplugin-OpenNLP,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+58,jjandxa,mybatis-mapper-pagehelper,,,,Test,1
+,,,,,,Deploy,2
+,,,,,,,
+59,dschadow,CloudSecurity,pollSCM,@daily,1,Checkout,1
+,,,,,,Build,2
+,,,,,,Sonar,3
+,,,,,,Archive,4
+,,,,,,,
+60,GateNLP,gateplugin-Tools,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+61,GateNLP,gateplugin-Tagger_Measurements,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+62,GateNLP,gateplugin-Stanford_CoreNLP,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+63,GateNLP,gateplugin-Lang_Romanian,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+64,GateNLP,gateplugin-Lang_Romanian,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+65,GateNLP,gateplugin-Tagger_DateNormalizer,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+66,GateNLP,gateplugin-Information_Retrieval,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+67,GateNLP,gateplugin-Stemmer_Snowball,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+68,GateNLP,gateplugin-Language_Identification,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+69,DBCDK,triton,pollSCM,H/03 * * * *,1,clear workspace,1
+,,,,,,verify,2
+,,,,,,warnings,3
+,,,,,,pmd,4
+,,,,,,docker build,5
+,,,,,,deploy staging,6
+,,,,,,,
+70,GateNLP,gateplugin-GENIA,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+71,GateNLP,gateplugin-Crowd_Sourcing,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+72,GateNLP,gateplugin-Format_PubMed,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+73,prachikhadke,jenkins-pipeline,cron,H 4/* 0 0 1-5,1,Example,1
+,,,pollSCM,H 4/* 0 0 1-5,2,Build,2
+,,,,,,-g,3
+,,,,,,Test on Linux,4
+,,,,,,Automation Test,5
+,,,,,,Deploy,6
+,,,,,,,
+74,iromu,weplay-compressor,upstream,"weplay-common/"" + env.BRANCH_NAME.replaceAll(""/"", ""%2F",1,Initialize,1
+,,,,,,Build,2
+,,,,,,Test,3
+,,,,,,Archive,4
+,,,,,,Docker arm,5
+,,,,,,Docker amd64,6
+,,,,,,Cleanup,7
+,,,,,,,
+75,GateNLP,gateplugin-Format_DataSift,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+76,GateNLP,gateplugin-Tagger_GATE-TIME,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+77,GateNLP,gateplugin-WordNet,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+78,GateNLP,gateplugin-Format_Twitter,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+79,GateNLP,gateplugin-TermRaider,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+80,GateNLP,gateplugin-Format_CSV,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+81,kunimido,eztrade-service-common,upstream,/eztrade/eztrade-parent/${env.BRANCH_NAME},1,Maven build,1
+,,,,,,,
+82,GateNLP,gateplugin-Tagger_Chemistry,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+83,mkj28,JenkinsSandbox,pollSCM,* * * * *,1,Resetting demo,1
+,,,,,,Testing,2
+,,,,,,Archiving - master only,3
+,,,,,,Archiving,4
+,,,,,,,
+84,GateNLP,gateplugin-Format_FastInfoset,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+85,muratkorkmaz89,openshift-java-cicd-pipeline,pollSCM,H/5 * * * *,1,Test,1
+,,,,,,Analyse,2
+,,,,,,Build,3
+,,,,,,Deploy DEV,4
+,,,,,,,
+86,GateNLP,gateplugin-Format_MediaWiki,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+87,sheeeng,elpmaxe-jubilant-giggle,cron,0 22 * * 1-5,1,Preparation,1
+,,,pollSCM,*/5 7-23 * * 1-6,2,Preparation stage called.,2
+,,,,,,Build,3
+,,,,,,Build stage called.,4
+,,,,,,Analysis,5
+,,,,,,Analysis stage called.,6
+,,,,,,Results,7
+,,,,,,Results stage called.,8
+,,,,,,Deploy,9
+,,,,,,Deploy stage called.,10
+,,,,,,,
+88,GateNLP,gateplugin-UIMA,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+89,NoriginMedia,nannoq-tools,pollSCM,,1,Drop Current Staging,1
+,,,,,,Build Nannoq-Tools,2
+,,,,,,Release Nannoq-Tools,3
+,,,,,,,
+90,GateNLP,gateplugin-Format_HTML5Microdata,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+91,GateNLP,gateplugin-Lang_Chinese,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+92,GateNLP,gateplugin-StringAnnotation,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+93,GateNLP,gateplugin-Format_MediaWiki,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+94,DBCDK,ocb-tools,pollSCM,H/03 * * * *,1,Clear workspace,1
+,,,,,,Maven build,2
+,,,,,,Publish pmd results,3
+,,,,,,Package,4
+,,,,,,Archive artifacts,5
+,,,,,,Build and deploy docker,6
+,,,,,,,
+95,GateNLP,gateplugin-Lang_Cebuano,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+96,GateNLP,gateplugin-Schema_Tools,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+97,GateNLP,gateplugin-Tagger_Numbers,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+98,GateNLP,gateplugin-Learning,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+99,GateNLP,gateplugin-Lang_Hindi,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+100,GateNLP,gateplugin-Text_Categorization,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+101,radhikak9,AWSFULLYINTEGRATED,pollSCM,* * * * *,1,Build,1
+,,,,,,Deployments,2
+,,,,,,Deploy-to-Staging,3
+,,,,,,Deploy-to-Production,4
+,,,,,,,
+102,sonatype,package-url-java,pollSCM,*/15 * * * *,1,Build,1
+,,,,,,Deploy,2
+,,,,,,,
+103,DBCDK,pg-queue,pollSCM,H/3 * * * *,1,build,1
+,,,,,,upload,2
+,,,,,,,
+104,AnilPastham,hello-world-docker-aws,pollSCM,H/5 * * * *,1,checkout,1
+,,,,,,prepare environment,2
+,,,,,,build jar,3
+,,,,,,build docker image,4
+,,,,,,deploy to ecs,5
+,,,,,,,
+105,GateNLP,gateplugin-DocumentNormalizer,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+106,DragonNukkit,MineProtocol,,,,check-commit,1
+,,,,,,compile,2
+,,,,,,deploy,3
+,,,,,,,
+107,GateNLP,gateplugin-Lang_Bulgarian,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+108,GateNLP,gateplugin-Lang_French,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+109,Hundur,TicTacToe,pollSCM,,1,Notify Start,1
+,,,,,,Build App,2
+,,,,,,Archive APK,3
+,,,,,,Deploy,4
+,,,,,,,
+110,MustWin,CDT-PQVP-0118,pollSCM,H/5 * * * *,1,Preparation,1
+,,,,,,Build,2
+,,,,,,Test,3
+,,,,,,Deploy,4
+,,,,,,,
+111,GateNLP,gateplugin-Tagger_NP_Chunking,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+112,GateNLP,gateplugin-Teamware_Tools,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+113,DLR-RY,outpost-core,pollSCM,H/10 * * * *,1,checkout,1
+,,,,,,build,2
+,,,,,,test,3
+,,,,,,,
+114,SordFysh,hello-world-docker-aws,pollSCM,* * * * *,1,checkout,1
+,,,,,,prepare environment,2
+,,,,,,build jar,3
+,,,,,,build docker image,4
+,,,,,,deploy to ecs,5
+,,,,,,,
+115,GateNLP,gateplugin-Ontology_Tools,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+116,GateNLP,gateplugin-Lang_Danish,upstream,"gate-top,gateplugin-Stanford_CoreNLP",1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+117,gminh474,testMower,pollSCM,H/5 8-22 * * 1-5,1,Release version ,1
+,,,,,,,
+118,vbottu,restexample,pollSCM,,1,Initialize,1
+,,,,,,Build,2
+,,,,,,package,3
+,,,,,,publish,4
+,,,,,,build,5
+,,,,,,,
+119,GateNLP,gateplugin-Tagger_Framework,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+120,viniciuslc,sistema-BACKEND,pollSCM,H/15 * * * 1-5,1,Deploy,1
+,,,,,,,
+121,GateNLP,gateplugin-Lang_Arabic,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+122,vishnunc,ecommerce,pollSCM,* * * * *,1,code pull,1
+,,,,,,build,2
+,,,,,,test,3
+,,,,,,dev-deploy,4
+,,,,,,smoke test,5
+,,,,,,qa-deploy,6
+,,,,,,ui tests,7
+,,,,,,,
+123,MunKongChan,dcep-sample-api,pollSCM,H/5 * * * *,1,Build,1
+,,,,,,Docker Build,2
+,,,,,,Docker Push,3
+,,,,,,Deploy,4
+,,,,,,,
+124,GateNLP,gateplugin-Lang_Italian,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+125,GateNLP,gate-spring,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+126,GateNLP,gateplugin-ConText,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+127,GateNLP,gateplugin-Alignment,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+128,GateNLP,gateplugin-Inter_Annotator_Agreement,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+129,GateNLP,gateplugin-Developer_Tools,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+130,MunKongChan,dcep-sample-ui,pollSCM,H/5 * * * *,1,Environment Config,1
+,,,,,,Setup,2
+,,,,,,Build,3
+,,,,,,Test,4
+,,,,,,Docker Build,5
+,,,,,,Docker Push,6
+,,,,,,Deploy,7
+,,,,,,,
+131,GateNLP,mimir,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+132,simoncomputing,hello-world-docker-aws,pollSCM,H/5 * * * *,1,checkout,1
+,,,,,,prepare environment,2
+,,,,,,build jar,3
+,,,,,,build docker image,4
+,,,,,,deploy to ecs,5
+,,,,,,,
+133,godsake,dashboard,cron,@daily,1,Clean the workspace,1
+,,,,,,Build the code,2
+,,,,,,Analyse the code,3
+,,,,,,deploy to feature,4
+,,,,,,deploy to staging,5
+,,,,,,Archive Build Output Artifacts,6
+,,,,,,Communicate the DEVOPS process,7
+,,,,,,,
+134,Jaxs01,cd-training,pollSCM,* * * * *,1,Build and Unit Test,1
+,,,,,,Deploy to Acceptance Test Environment,2
+,,,,,,Acceptance Test,3
+,,,,,,Deploy to System Test Environment,4
+,,,,,,,
+135,dtschan,jenkins-techlab-openshift,pollSCM,H/5 * * * *,1,Build,1
+,,,,,,Test,2
+,,,,,,Deploy,3
+,,,,,,,
+136,nrosania,jpetstore,,,,Checkout Source,1
+,,,,,,Set up Environment Variables,2
+,,,,,,"Build, Test, and Package",3
+,,,,,,Git Tag,4
+,,,,,,Email Notification,5
+,,,,,,Publish to Nexus,6
+,,,,,,Push to UrbanCode Deploy,7
+,,,,,,Deploy to DEV,8
+,,,,,,Deploy Application,9
+,,,,,,Update JIRA,10
+,,,,,,,
+137,mudasar187,GameOfTicTacToe,pollSCM,,1,Notify Start,1
+,,,,,,Build App,2
+,,,,,,Archive APK,3
+,,,,,,Deploy,4
+,,,,,,,
+138,traviskeenan,GuitarIntervalFlashcard,cron,H/30 * * * *,1,QA End to End Test,1
+,,,,,,,
+139,SvenSuessenguth,torganizer,pollSCM,* * * * *,1,compile,1
+,,,,,,test,2
+,,,,,,deploy,3
+,,,,,,report,4
+,,,,,,,
+140,NREL,developer.nrel.gov,pollSCM,* * * * *,1,rbenv-install,1
+,,,,,,build,2
+,,,,,,test,3
+,,,,,,deploy,4
+,,,,,,s3://devstage.nrel.gov/,5
+,,,,,,,
+141,mulesoft-consulting,cicd-hello-world,pollSCM,* * * * *,1,FEATURE Build and Test,1
+,,,,,,"DEV and TEST Build, Test, and Deploy",2
+,,,,,,Prepare Release,3
+,,,,,,PROD Build and Test,4
+,,,,,,,
+142,MehrCurry,springbootadmin,pollSCM,H/5 * * * *,1,"src/main/config/environment/${PROJECT_NAME}/iteraria-pizza-service.properties', description: 'path to the environment configuration file of the stage', name: 'propertiesFile",1
+,,,,,,Environment Configuration,2
+,,,,,,Test,3
+,,,,,,Build,4
+,,,,,,Analysis,5
+,,,,,,Migrate Database,6
+,,,,,,Deploy to Nexus,7
+,,,,,,Deploy to OpenShift,8
+,,,,,,,
+143,xjiaon,pipeline,pollSCM,10 * * * *,1,download-code,1
+,,,,,,download aliyun,2
+,,,,,,download sharebuy,3
+,,,,,,mvn aliyun-code,4
+,,,,,,mvn-sonar sharebuy,5
+,,,,,,mav sharebuy,6
+,,,,,,sonar-sharebuy,7
+,,,,,,down-sharebuy,8
+,,,,,,build-sharebuy,9
+,,,,,,check-webstat,10
+,,,,,,,
+144,jc21,ethos-config-manager,,,,Prepare,1
+,,,,,,Build,2
+,,,,,,Publish,3
+,,,,,,,
+145,lsd-lecture,repo-09,pollSCM,*/5 * * * *,1,Build,1
+,,,,,,Test,2
+,,,,,,Reports,3
+,,,,,,Deploy,4
+,,,,,,,
+146,lsd-lecture,repo-09,pollSCM,*/5 * * * *,1,Build,1
+,,,,,,Test,2
+,,,,,,Reports,3
+,,,,,,Deploy,4
+,,,,,,,
+147,GateNLP,gateplugin-Tagger_Boilerpipe,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,
+148,buildit,twig,pollSCM,* * * * *,1,Bootstrap Additional Jobs,1
+,,,,,,Setup,2
+,,,,,,Build,3
+,,,,,,Test,4
+,,,,,,Analysis,5
+,,,,,,Package,6
+,,,,,,Deploy,7
+,,,,,,E2E Tests,8
+,,,,,,Promote Build to latest,9
+,,,,,,,
+149,GateNLP,gateplugin-ANNIE,upstream,gate-top,1,Build,1
+,,,,,,Document,2
+,,,,,,Deploy,3
+,,,,,,,

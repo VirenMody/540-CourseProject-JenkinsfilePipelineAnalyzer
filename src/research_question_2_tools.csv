@@ -1,0 +1,452 @@
+Research Question 1: What types of tools are used in the pipeline?
+Repositories with Jenkinsfiles downloaded from GitHub: 200
+Number of Jenkinsfiles suitable for parsing: 177
+Number of Different Build Tools: 6
+"Different Types of Build Tools: ['maven', 'jdk', 'nodejs', 'git', 'gradle', 'go']"
+Average Number of Build Tools Used Per Repository: 1.4915
+"Frequency of Build Tool Use by Repository: maven: 0.54, jdk: 0.39, nodejs: 0.04, git: 0.01, gradle: 0.02, go: 0.0, "
+"
+"
+Parsed Jenkinsfile Data
+RepoNum,Username,RepositoryName,ToolType,ToolVersion,NumberOfTools
+1,rodrigomirazo,spring-boot-jenkins-pipeline,maven,Maven 3.3.9,1
+,,,jdk,jdk8,2
+,,,,,
+2,stubrowncloudbees,stu_pipeline_demos_blueocean,maven,maven,1
+,,,,,
+3,cristianrgreco,checkout-kata-node,nodejs,latest,1
+,,,,,
+4,gopikrishna1929,devopstraining,maven,maven3,1
+,,,jdk,jdk8,2
+,,,,,
+5,yedlamadhu,gittest,maven,apache-maven-3.0.1,1
+,,,,,
+6,anascotti,java9-springboot,jdk,JDK9,1
+,,,maven,mvn-3.5.2,2
+,,,,,
+7,polpoman,sts_prova,maven,Maven3,1
+,,,jdk,JDK8,2
+,,,,,
+8,zainabed,translations,maven,Maven 3.2.1,1
+,,,,,
+9,sarguna19,maven-project,maven,localMAVEN,1
+,,,,,
+10,shankarkalmade,SpringSecurity,jdk,jdk8,1
+,,,maven,maven3,2
+,,,,,
+11,gopikrishna1929,sample,maven,maven3,1
+,,,jdk,jdk8,2
+,,,,,
+12,qshore,docker,maven,Maven 3.5.2,1
+,,,,,
+13,leolomi,project,maven,Maven 3.5.3,1
+,,,jdk,jdk8,2
+,,,,,
+14,angsdey2,Demo-Spring-Boot-Application,maven,apache-maven-3.3.9,1
+,,,,,
+15,sargissargsyan,armindian-selenium,maven,maven,1
+,,,,,
+16,Pirrigat,MavenTest2,maven,Maven,1
+,,,jdk,Java8u131,2
+,,,,,
+,,,,,
+18,qshore,qshore_test1,maven,Maven 3.5.2,1
+,,,,,
+19,datoona,LearnCode,maven,maven,1
+,,,,,
+20,sunels,springEdu,maven,mvn,1
+,,,jdk,jdk8,2
+,,,,,
+21,verydapeng,spring-boot-web-sample,maven,Maven 3.3.9,1
+,,,jdk,jdk8,2
+,,,,,
+22,relateid,demo2jennkins,git,Default,1
+,,,,,
+23,fbamgith,playingJenkins,maven,Maven 3.5.0,1
+,,,,,
+24,WebSlideR76,HelloWorld,maven,maven-tool,1
+,,,,,
+25,gilbride22,bananatest,maven,Maven 3.3.9,1
+,,,jdk,jdk8,2
+,,,,,
+26,tillmannheigel,FRDRV,gradle,gradle-4.3.1,1
+,,,,,
+27,tillmannheigel,FRDRV,gradle,gradle-4.3.1,1
+,,,,,
+28,lusyerit,armindian-tasks,maven,maven,1
+,,,,,
+,,,,,
+30,Shushan91,My-First-Project,maven,maven,1
+,,,,,
+31,andrescuartasp,hw,maven,Maven,1
+,,,jdk,java8,2
+,,,,,
+32,EnnoLohmann,AngularChunkReplacement,nodejs,MyNode,1
+,,,,,
+33,hemnarahari,webrepo,maven,maven_3.5.3,1
+,,,,,
+,,,,,
+35,veeraaix,webproj1,maven,Maven 3.3.9,1
+,,,jdk,jdk8,2
+,,,,,
+36,shekumar,option2,maven,Maven 3.3.9,1
+,,,jdk,jdk8,2
+,,,,,
+37,finiteset,SelfHostedChatPolling,go,Go 1.8,1
+,,,,,
+38,lilitmkhoyan,JenkinsSelenium,maven,maven,1
+,,,,,
+39,shmuelmax,test2,maven,mvn,1
+,,,jdk,jdk,2
+,,,,,
+40,shmuelmax,test2,maven,mvn,1
+,,,jdk,jdk,2
+,,,,,
+41,rikmar15,devOps,jdk,JDK 8,1
+,,,maven,apache-maven-3.3.9,2
+,,,,,
+42,apache,sling-site,maven,Maven 3.3.9,1
+,,,jdk,JDK 1.8 (latest),2
+,,,,,
+,,,,,
+44,erkoakka,example,maven,LOCALMAVEN,1
+,,,jdk,jdk8,2
+,,,,,
+45,CalculatorApps,Calculator,maven,Maven 3.3.9,1
+,,,jdk,jdk8,2
+,,,,,
+46,Tomschi,jenkins-docker-pipeline,jdk,oraclejdk8,1
+,,,,,
+,,,,,
+48,ozivnustka,jenkinsfile-helloworld,nodejs,nodejs8,1
+,,,,,
+49,odeand14,Jenkins-Maven,jdk,JDK 8,1
+,,,maven,apache-maven-3.3.9,2
+,,,,,
+50,ravindra2479,springboot,maven,maven3,1
+,,,jdk,java8,2
+,,,,,
+51,thasija,Kafka-app,maven,Maven 3.5.3,1
+,,,jdk,jdk8,2
+,,,,,
+52,mfExampleOrg,rectangles,maven,MAVEN3,1
+,,,jdk,JDK9,2
+,,,,,
+53,annarpetrosyan,selenium-project-2018-test,maven,maven,1
+,,,,,
+54,GoodEvent,webpack-simple,nodejs,node7.10.0,1
+,,,,,
+55,asethura,my-app,maven,Maven 3.3.9,1
+,,,,,
+56,carlara75,simple-java-maven-app,maven,Maven 3.3.9,1
+,,,jdk,jdk8,2
+,,,,,
+57,Sk212017,Sample,maven,maven3.5,1
+,,,,,
+58,HE-Arc-ODI,sp18-odi-serie2-talhamohsabir,maven,Maven 3.3.9,1
+,,,jdk,jdk8,2
+,,,,,
+59,sasi-152,myrepo,maven,mvncfg,1
+,,,,,
+,,,,,
+,,,,,
+62,binay1108,simple-java-maven-app,maven,Maven 3.3.9,1
+,,,jdk,jdk8,2
+,,,,,
+63,RomanDelim,jenkins_with_maven,maven,M3,1
+,,,,,
+64,KiranKumar887,Jenkins_Dummy,maven,Maven 3.3.9,1
+,,,jdk,java8,2
+,,,,,
+65,haavardU,JenkinsFileTest,maven,MAVEN,1
+,,,,,
+66,NaneGrigoryan,test-google-search,maven,maven,1
+,,,,,
+67,LeoStudy,discovery-service,maven,M3,1
+,,,,,
+68,javadelight,delight-nashorn-sandbox,maven,mvn3.5.2,1
+,,,jdk,jdk9,2
+,,,,,
+69,fxjordan,junit5-mockito-extension,jdk,jdk-8,1
+,,,,,
+70,HE-Arc-ODI,IndusJenkinsfileJavaMaven_mirko_muller,maven,Maven 3.3.9,1
+,,,jdk,jdk8,2
+,,,,,
+71,CarlosCintado,testIntegration,maven,Maven 3.5.0,1
+,,,jdk,jdk8,2
+,,,,,
+,,,,,
+73,sat-j,mvn-jenkins-pipeline,maven,M3,1
+,,,jdk,JDK,2
+,,,,,
+,,,,,
+75,Suresh498,webapp,maven,Maven3.5,1
+,,,,,
+76,Lucasljungberg,sef18group15-CI-server,maven,maven 3.5.2,1
+,,,jdk,jdk 8,2
+,,,,,
+,,,,,
+78,heghinev,selenium-armindian,maven,maven,1
+,,,,,
+79,Bragalund,calculationAPI,jdk,jdk,1
+,,,maven,maven,2
+,,,,,
+80,HE-Arc-ODI,IndusJenkinsfile_mirko_muller,maven,Maven 3.3.9,1
+,,,jdk,jdk8,2
+,,,,,
+81,rowanfoo,jenkinsbuild,maven,MAVEN,1
+,,,jdk,JDK8,2
+,,,,,
+82,godstone,mrs_stqm,maven,maven 3.3.3,1
+,,,jdk,jdk8,2
+,,,,,
+83,kammavar,Tests,maven,maven 3.3.9,1
+,,,jdk,jdk8,2
+,,,,,
+84,fxjordan,rest-job-service,jdk,jdk-8,1
+,,,,,
+85,ravindra2479,ravindrajava,jdk,jdk,1
+,,,maven,maven3,2
+,,,,,
+86,lenastshaleb,PicMonolitic,maven,Maven,1
+,,,nodejs,NodeJS,2
+,,,jdk,Jdk,3
+,,,,,
+87,valentindubois,JenkinsTest,maven,Maven 3.3.9,1
+,,,jdk,jdk8,2
+,,,,,
+88,zaileon,CreateReactApp,nodejs,node8,1
+,,,,,
+89,AspireInformationTechnologiesLimited,amq,maven,maven350,1
+,,,jdk,sunjdk8,2
+,,,gradle,gradle41,3
+,,,,,
+90,20ayoub,Mavenclinic,maven,Maven339,1
+,,,jdk,JAVA8,2
+,,,,,
+,,,,,
+92,MarshallZhenningLiu,smurfshop,jdk,java,1
+,,,,,
+93,tomowork,alipay-sdk-java,maven,Maven 3.3.9,1
+,,,,,
+94,vamsi454,junit-sample-app,maven,M2_HOME,1
+,,,,,
+95,bahadyr,testone,maven,maven-3.5.3,1
+,,,,,
+96,daanaerts,automatically-angular,nodejs,Node 6.9.5,1
+,,,,,
+97,brettporter,blue-ocean-node-test,nodejs,Node 6.x,1
+,,,,,
+98,anthonyikeda,basic-api,maven,Maven 3.5.0,1
+,,,jdk,jdk8,2
+,,,,,
+99,dwalldorf,timetrack,maven,mvn3,1
+,,,jdk,jdk8,2
+,,,,,
+100,abeyratc,mergenote,maven,Maven 3.3.9,1
+,,,jdk,jdk8,2
+,,,,,
+,,,,,
+102,michaelcoll,test-jenkinsfile,maven,Maven 3.5.3,1
+,,,jdk,jdk8,2
+,,,,,
+103,partha-dey,myRepo,maven,test1,1
+,,,,,
+104,prasetyo531,mavenjob,maven,MAVEN_HOME,1
+,,,jdk,JAVA_HOME,2
+,,,,,
+105,davidh87,jenkins-ci-testing,maven,maven3,1
+,,,,,
+106,koltysh,Maven,maven,vova,1
+,,,,,
+107,esolis-technisys,calculator,maven,maven_3.5.3,1
+,,,jdk,java-8-oracle,2
+,,,,,
+108,Jyothinayak123,Jyothi,maven,Mav,1
+,,,,,
+109,kuona,kuona-project,jdk,jdk8,1
+,,,,,
+110,tsahaca,MyTestOrg,maven,maven 3,1
+,,,jdk,java 8,2
+,,,,,
+111,FeatureIDE,FeatureIDE,maven,Maven 3.5.2,1
+,,,,,
+112,javadelight,scheduler,maven,mvn3.5.2,1
+,,,jdk,jdk9,2
+,,,,,
+113,javadelight,delight-java-start-process,maven,mvn3.5.2,1
+,,,jdk,jdk9,2
+,,,,,
+114,sunilyadav85,elevator-app,maven,localMaven,1
+,,,,,
+115,knoldus,jenkins-demo-app,maven,Maven 3.3.9,1
+,,,jdk,jdk8,2
+,,,,,
+116,OussMess,jenkins,maven,maven,1
+,,,jdk,java8,2
+,,,,,
+117,ivans-innovation-lab,my-company-blog-materialized-view-microservice,maven,maven-3,1
+,,,,,
+118,semtexak,payvont-auth-server,maven,Maven 3.5.3,1
+,,,jdk,jdk8,2
+,,,,,
+119,javadelight,delight-async-properties,maven,mvn3.5.2,1
+,,,jdk,jdk9,2
+,,,,,
+120,guillelucero,webapp,maven,apache-maven-3.5.2,1
+,,,,,
+121,jesselurie,randomuser,nodejs,Node 6.x,1
+,,,,,
+122,peegee84,IdeaProjects,maven,M3,1
+,,,jdk,jdk8,2
+,,,,,
+123,geovas78,onlinebanking-microservice,jdk,jdk1.8.0-162,1
+,,,gradle,Gradle-4.6,2
+,,,,,
+124,mxro,tree-api,maven,mvn3.5.2,1
+,,,jdk,jdk9,2
+,,,,,
+125,iilish,maven-example,jdk,jdk8,1
+,,,maven,maven3,2
+,,,,,
+126,mxro,oneAsyncTests,maven,mvn3.5.2,1
+,,,jdk,jdk9,2
+,,,,,
+127,nspobra,docker-maven-build,maven,maven-3.5.3,1
+,,,jdk,jdk-8,2
+,,,,,
+128,babitadhami,Demo,maven,Maven 3.5.0,1
+,,,jdk,jdk7,2
+,,,,,
+129,javadelight,delight-jre-utils,maven,mvn3.5.2,1
+,,,jdk,jdk9,2
+,,,,,
+130,nehas19,jenkins-pipeline-,maven,Maven 3.5.3,1
+,,,jdk,JDK1.8,2
+,,,,,
+131,pramodvishwa,Tutorial-Pipe,maven,MAVEN,1
+,,,jdk,JAVA,2
+,,,,,
+132,javadelight,delight-server,maven,mvn3.5.2,1
+,,,jdk,jdk9,2
+,,,,,
+133,javadelight,delight-keyvalue-android,maven,mvn3.5.2,1
+,,,jdk,jdk9,2
+,,,,,
+134,javadelight,delight-maven-tools,maven,mvn3.5.2,1
+,,,jdk,jdk9,2
+,,,,,
+135,ivans-innovation-lab,my-company-project-materialized-view,maven,maven-3,1
+,,,,,
+136,ivans-innovation-lab,my-company-project-materialized-view-microservice,maven,maven-3,1
+,,,,,
+137,arolls,FrameWork,maven,Maven 3.3.9,1
+,,,jdk,jdk8,2
+,,,,,
+138,yvgiridhar,maven,maven,Maven 3.3.9,1
+,,,jdk,jdk8,2
+,,,,,
+139,bonganim911,starter,nodejs,Default,1
+,,,,,
+140,javadelight,delight-clients,maven,mvn3.5.2,1
+,,,jdk,jdk9,2
+,,,,,
+141,jenkins-infra,deprecated-usage-in-plugins,jdk,jdk8,1
+,,,maven,mvn,2
+,,,,,
+142,mcaironeplc,demo-project,maven,Maven 3.5.2,1
+,,,jdk,jdk8,2
+,,,,,
+143,kondusreenath,sree,maven,maven,1
+,,,jdk,jdk8,2
+,,,,,
+144,flotorel,minishift-jenkinsfile,maven,maven,1
+,,,,,
+145,javadelight,delight-main,maven,mvn3.5.2,1
+,,,jdk,jdk9,2
+,,,,,
+146,javadelight,delight-gwt-simple-linker,maven,mvn3.5.2,1
+,,,jdk,jdk9,2
+,,,,,
+147,rveede,example-project-1,gradle,4.6,1
+,,,,,
+148,raghu502,second_jenkin,maven,Maven3.0.5,1
+,,,jdk,java8,2
+,,,,,
+149,imranbohoran,csv-to-json,maven,Maven 3.3.9,1
+,,,jdk,jdk8,2
+,,,,,
+150,f608253,Java_Pipeline_Project,maven,Maven,1
+,,,jdk,JAVA,2
+,,,,,
+151,NikoleK,selenium-cucumber-java,maven,maven,1
+,,,jdk,jdk8,2
+,,,git,git,3
+,,,,,
+152,javadelight,delight-simple-log-graylog,maven,mvn3.5.2,1
+,,,jdk,jdk9,2
+,,,,,
+153,nuno-antao,hello-world-maven,maven,Maven 3.5.2,1
+,,,jdk,JDK 9.0.4,2
+,,,,,
+154,nandhu8,myrepo,maven,mvncfg,1
+,,,,,
+155,Amogh1995,jenkinsfile,maven,M2_HOME,1
+,,,jdk,JAVA_HOME,2
+,,,,,
+156,bennypi,catfood,maven,maven,1
+,,,,,
+157,javadelight,delight-concurrency,maven,mvn3.5.2,1
+,,,jdk,jdk9,2
+,,,,,
+158,javadelight,delight-decoupled-gwt-rpc,maven,mvn3.5.2,1
+,,,jdk,jdk9,2
+,,,,,
+159,javadelight,delight-http-firewall,maven,mvn3.5.2,1
+,,,jdk,jdk9,2
+,,,,,
+160,BRV147,Maven,maven,maffin,1
+,,,,,
+161,ajaykumar011,maven_java_tutorial,maven,Maven3.1.1,1
+,,,jdk,java8,2
+,,,,,
+162,cidemo-integration-tests,express-demo,nodejs,node-7,1
+,,,,,
+163,mxro,java-file-utils,maven,mvn3.5.2,1
+,,,jdk,jdk9,2
+,,,,,
+164,javadelight,delight-js-exec-api,maven,mvn3.5.2,1
+,,,jdk,jdk9,2
+,,,,,
+165,ilopeza,webapp,maven,apache-maven-3.5.2,1
+,,,,,
+166,herrmann,jasdd,maven,Maven 3.5.0,1
+,,,jdk,jdk7,2
+,,,,,
+167,ivans-innovation-lab,my-company-support,maven,maven-3,1
+,,,,,
+168,BRV147,Maven,maven,maffin,1
+,,,,,
+169,nuno-antao,hello-world-maven,maven,Maven 3.5.2,1
+,,,jdk,JDK 9.0.4,2
+,,,,,
+170,ivans-innovation-lab,my-company-blog-domain-microservice,maven,maven-3,1
+,,,,,
+171,javadelight,delight-trie-map-java,maven,mvn3.5.2,1
+,,,jdk,jdk9,2
+,,,,,
+172,fxjordan,spring-hateoas-hal-support,jdk,jdk-8,1
+,,,,,
+173,akhilvaranasi90,deployable-mvn-webapp,maven,maven-3,1
+,,,jdk,Java-8,2
+,,,,,
+174,ivans-innovation-lab,my-company-blog-materialized-view,maven,maven-3,1
+,,,,,
+175,SunilNagavelli,MYGITREPO,maven,Maven3.1.1,1
+,,,jdk,java8,2
+,,,,,
+176,abhishek0329,JenkinsMaven,maven,Maven3.1.1,1
+,,,jdk,java8,2
+,,,,,
+177,markramach,spring-boot-prototype-docker,maven,maven,1
+,,,,,

@@ -1,0 +1,56 @@
+"Research Question #4: Which file extensions are most frequently and least frequently archived?(.exe, .jar, everything, etc.)"
+Note: 
+"When analyzing 200 Jenkinsfiles, there are many extension types which occur less than 3% of the time."
+"Here is the list of those extensions: .ini, .json, .xml, .sh, .tar.gz, .*, .html, .hpi, .a, .yml, .pdf, .whl, .csv, .gz, .deb, .exe, .ttl, .1.0.jar, .aar, .so, .tbz, .iso, .scmp, .rpm, .out, .0.1.jar, .h, .hex, .msi"
+"To prevent these from overshadowing other prominent extension types, they were grouped into one extension labeled Other,"
+"and their occurrences were averaged. You will see this in the first table below. To see them ungrouped, look at the 2nd table below."
+Answer: 
+Extension,NumArtifacts,Percentage
+.jar,81,39.9
+All,35,17.2
+None,31,15.3
+.war,20,9.9
+.zip,13,6.4
+.txt,11,5.4
+.log,10,4.9
+Other,2,1.0
+"
+"
+Jenkinsfile Parsed Data for Artifacts and Extensions
+Extension,NumArtifacts,Percentage
+.jar,81,30.8
+All,35,13.3
+None,31,11.8
+.war,20,7.6
+.zip,13,4.9
+.txt,11,4.2
+.log,10,3.8
+.ini,6,2.3
+.json,6,2.3
+.xml,5,1.9
+.sh,4,1.5
+.tar.gz,3,1.1
+.*,3,1.1
+.html,3,1.1
+.hpi,3,1.1
+.a,2,0.8
+.yml,2,0.8
+.pdf,2,0.8
+.whl,2,0.8
+.csv,2,0.8
+.gz,2,0.8
+.deb,2,0.8
+.exe,2,0.8
+.ttl,1,0.4
+.1.0.jar,1,0.4
+.aar,1,0.4
+.so,1,0.4
+.tbz,1,0.4
+.iso,1,0.4
+.scmp,1,0.4
+.rpm,1,0.4
+.out,1,0.4
+.0.1.jar,1,0.4
+.h,1,0.4
+.hex,1,0.4
+.msi,1,0.4
