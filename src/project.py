@@ -15,21 +15,15 @@ import unittest
 
 import project_utils
 
-# TODO Checked for balanced brackets
-# TODO Change filename number for rq 1 and 2
-# TODO In search_and_download_jenkinsfiles, skip repos containing 'node' and other issues (after this line res = requests.get(results[i][1]))
-# TODO Artifacts Research Questions - Maybe correlation between tools and artifact file extensions?
 # TODO What is the correlation between the presence of disableconcurrentbuilds() and hashes in triggers?
-# TODO Research question involving Slack
-# TODO Skip lines that start with comments??
-# TODO Make sure code is commented and logged properly
-# TODO Skip invalid Jenkinsfiles (i.e. empty, imbalanced brackets, starts with pipeline or node)
-# TODO MAYBE - For each research question, put together a list of repositories with good Jenkinsfiles
+# TODO Research question involving notification systems (email, Slack, etc.)
 
 
-# TODO Update the following to paths for your system
+# TODO PROFESSOR - Update the following to paths for your system
+# TODO PROFESSOR - Change the logger level to your preference
 CLONED_REPOS_DIR_PATH = 'C:/Users/Viren/Google Drive/1.UIC/540/guillermo_rojas_hernandez_viren_mody_courseproject/ClonedRepos/'
 # CLONED_REPOS_DIR_PATH = '/home/guillermo/cs540/guillermo_rojas_hernandez_viren_mody_courseproject/ClonedRepos/'
+LOGGER_LEVEL = logging.DEBUG
 
 # Research Topic Number - Will be appended to the directory path to separate Jenkinsfiles by research topic
 research_topic_num = 0
@@ -55,7 +49,6 @@ def configure_logger(file_name, level):
     CRITICAL	A serious error, indicating that the program itself may be unable to continue running.
     """
 
-    # TODO change logger level to your preference
     LOG_FILENAME = file_name
     logger.setLevel(level)
     formatter = logging.Formatter('%(levelname)s:%(filename)s: In %(funcName)s(): On Line: %(lineno)d: %(message)s')
@@ -1159,7 +1152,7 @@ def analyze_research_questions_artifacts():
 
 def main():
 
-    configure_logger('project.log', logging.DEBUG)
+    configure_logger('project.log', LOGGER_LEVEL)
     authenticate_github_object()
 
     # Research Question #1: How does the number of triggers in a pipeline correlate with the number of stages in the pipeline?
