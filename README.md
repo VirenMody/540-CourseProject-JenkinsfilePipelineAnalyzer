@@ -3,6 +3,9 @@
 ## Course Project Description:
 Open-source projects available through online code repository websites such as GitHub provide software engineers with a rich reference for potential projects.  Oftentimes, the code repository will not only include the source code, but will also include the build and pipeline configuration so that developers can build the project or library.  This project will be analyzing the build configuration files for the popular automation tool Jenkins, in order to get information on how software engineering projects are built today.
 
+For this project, formulating questions and even choosing questions from the example list was not a simple task and required some investigation. In order to formulate these questions, we started  by understanding  what a Jenkinsfile is and then we had to sift through the all the details of the pipeline syntax in the Jenkins documentation in order to start formulating some questions. Next, we performed a variety of search queries on GitHub’s web search interface for repositories containing actual Jenkinsfiles that we could examine to spark more wonderings about DevOps pipelines.
+
+
 Configuration Instructions
 --- 
 Please follow these steps:  
