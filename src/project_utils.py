@@ -80,5 +80,3 @@ def search_by_code(git_hub, my_query, num):
         results.append((result_object, raw_url, item.repository.full_name))
 
     return results
-
-
