@@ -67,8 +67,8 @@ def authenticate_github_object():
     """
     Function authenticates GitHub object using username and access token
     """
-    GITHUB_USERNAME = 'virenmody'
-    GITHUB_ACCESS_TOKEN = 'feec9be9b75ded7680e74e1be28b47c50564c2ac'
+    GITHUB_USERNAME = '****'
+    GITHUB_ACCESS_TOKEN = '****'
 
     # Authenticate GitHub object
     global git_hub
